@@ -1,0 +1,2 @@
+#!/bin/sh
+clickhouse-server --config-file /etc/clickhouse-server/config.xml --pid-file /var/run/clickhouse-server/clickhouse-server.pid --daemon

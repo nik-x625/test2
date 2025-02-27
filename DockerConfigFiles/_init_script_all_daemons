@@ -1,0 +1,133 @@
+#!/bin/bash
+
+# These variables define which services to start and stop, and in which
+# order that should be done. You should not need to change anything else.
+# Files with exactly that name (and executable flag set!) should be placed in
+# $SUBSERVICES_LOCATION (see below). By default, that should already be the
+# case.
+SUBSERVICES_START="mosquitto redis-server rqworker gunicorn"
+SUBSERVICES_STOP="gunicorn rqworker redis-server mosquitto"
+
+
+# This defines where this script looks for the other init-scripts. Must end
+# with a "/".
+SUBSERVICES_LOCATION="/etc/init.d/"
+
+
+### BEGIN INIT INFO
+# Provides:             all_daemons
+# Required-Start:       $local_fs $remote_fs
+# Should-Start:         $network $named $time $syslog sendmail mysql dhcp
+# Should-Stop:          $named $syslog sendmail mysql dhcp
+# Required-Stop:        $local_fs $remote_fs $network
+# Default-Start:        2 3 5
+# Default-Stop:         0 1 4 6
+# Short-Description:    All daemons in the application
+### END INIT INFO
+
+
+. /lib/lsb/init-functions
+
+
+# already when we start.
+for service in $SUBSERVICES_START $SUBSERVICES_STOP; do
+    script="$SUBSERVICES_LOCATION$service"
+    # "test -x" will also be true for directories, so "test -f" as well
+    [ -x "$script" -a -f "$script" ] || \
+        log_warning_msg "Warning: $script does not exist or is not" \
+                        "executable. This will most likely cause you" \
+                        "trouble!"
+done
+
+
+report()
+{
+    local status msg_suc msg_fail
+    status="$1"
+    msg_suc="$2"
+    msg_fail="$3"
+    if [ $status = "0" ] ; then
+        log_success_msg $msg_suc
+    else
+        log_failure_msg $msg_fail
+    fi
+}
+
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+
+case "$1" in
+  start)
+    # Run all init scripts listed in SUBSERVICES_START, exit and signal
+    # failure as soon as one service fails to start.
+    for subservice in $SUBSERVICES_START; do
+        tostart="$SUBSERVICES_LOCATION$subservice"
+        "$tostart" start || {
+            log_failure_msg "Service startup failed for $subservice!"
+            exit 1
+        }
+    done
+
+    exit 0
+    ;;
+  stop)
+    # If for whatever reason, one of the subservices reports an error while
+    # shutting down, we remember that and report an error ourselves. But
+    # even after an error we keep trying to shut down the remaining
+    # services, in an attempt to do as much expected work as possible.
+    all_ok="yes"
+    for subservice in $SUBSERVICES_STOP; do
+        "$SUBSERVICES_LOCATION$subservice" stop || all_ok="no"
+    done
+
+    if [ $all_ok = "yes" ]; then
+        exit 0
+    else
+        log_failure_msg "All_services: Service shutdown failed or is incomplete!"
+        exit 1    # generic or unspecified error
+    fi
+
+    ;;
+  # Restart when force-reload is requested. This complies with LSB.
+  restart|force-reload)
+    # Check if all RT069 XML property files can be parsed or exit
+
+    # To be LSB compliant, we need to completely start _everything_
+    # even if we are not running yet.
+    $0 stop
+    $0 start && exit 0 || exit 1
+        ;;
+  status)
+    # Return codes for status request:
+    #    0: All up and running
+    #    3: Not running, or only some running. Remember, we are probably
+    #       checking multiple processes, depending on what was configured.
+    missing=""
+    running=""
+    for subservice in $SUBSERVICES_STOP; do
+        if "$SUBSERVICES_LOCATION$subservice" status; then
+            running="$running $subservice"
+        else
+            missing="$missing $subservice"
+        fi
+    done
+
+    if [ -z "$missing" ]; then
+        log_success_msg "All services are running"
+        exit 0
+    else
+        echo
+        log_success_msg "These services are running:$running"
+        log_failure_msg "These services are NOT running:$missing"
+        exit 3
+    fi
+    ;;
+  reload|try-restart)
+    exit 3    # LSB code for "not implemented"
+    ;;
+  *)
+    echo "Usage: $0 {start|stop|restart|status|force-reload}" >&2
+    exit 2    # LSB code for "invalid arguments"
+    ;;
+esac
+
+exit 0

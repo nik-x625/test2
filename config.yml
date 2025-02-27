@@ -1,0 +1,3 @@
+logger:
+  log_file_path: '/opt/qlines_app/mylogs.log'
+  # logpath: '/var/www/site_platx/mylogs.log'

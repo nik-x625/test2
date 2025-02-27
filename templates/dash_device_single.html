@@ -1,0 +1,235 @@
+{% extends 'dash_base_template.html' %}
+{% block header_content %}
+
+<!-- <script type="text/javascript">
+    var client_name_from_flask = '{{ device_info_to_render.client_name }}'
+</script> -->
+
+<script src="/static/js/charts_manager.js"></script>
+<!-- <script src="/static/js/add_chart.js"></script> -->
+
+<!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js" integrity="sha512-bLT0Qm9VnAYZDflyKcBaQ2gg0hSYNQrJ8RilYldYQ1FxQYoCLtUjuuRuZo+fjqhx/qtq/1itJ0C2ejDxltZVFg==" crossorigin="anonymous"></script> -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/3.0.4/socket.io.js"
+    integrity="sha512-aMGMvNYu8Ue4G+fHa359jcPb1u+ytAF+P2SCb+PxrjCdO3n3ZTxJ30zuH39rimUggmTwmh2u7wvQsDTHESnmfQ=="
+    crossorigin="anonymous"></script>
+
+<!-- The scripts for websocket (socketio) -->
+<!-- <script src="/static/js/websocket_updates.js"></script> -->
+
+{% endblock %}
+
+{% block page_content %}
+
+<p></p>
+
+<div class="container-fluid">
+
+    <div class="row">
+
+        <!-- first column on page-->
+        <div class="col-md-6 p-1 bg-light">
+
+            <div class="col-md-12">
+                <table class="table table-bordered table-hover table-sm">
+                    <thead>
+                        <tr style="background-color: #0074e4; color: white;">
+                            <th>
+                                Parameter
+                            </th>
+                            <th>
+                                Value
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+
+                        <tr class="table-success">
+                            <td>
+                                Client name
+                            </td>
+                            <td>
+                                <p id="client_name">{{device_info_to_render.client_name}}</p>
+                            </td>
+                        </tr>
+
+
+                        <tr class="table-success">
+                            <td>
+                                User name
+                            </td>
+                            <td>
+                                <p id="user_name">{{device_info_to_render.user_name}}</p>
+                            </td>
+                        </tr>
+
+                        <tr class="table-success">
+                            <td>
+                                Access token
+                            </td>
+                            <td>
+                                <p id="device_token">{{device_info_to_render.device_token}}</p>
+                            </td>
+                        </tr>
+                        <tr class="table-success">
+                            <td>
+                                Registered
+                            </td>
+                            <td>
+                                <p id="ts_registered">{{device_info_to_render.ts_registered}}</p>
+                            </td>
+                        </tr>
+
+                        <tr class="table-success">
+                            <td>
+                                Last message
+                            </td>
+                            <td>
+                                <p id="ts_lastmessage"></p>
+                            </td>
+                        </tr>
+
+
+                    </tbody>
+                </table>
+            </div>
+
+
+            <div class="row">
+                <div class="col-md-6">
+
+                    <div class="mt-2">
+                        <label for="cli_input">CLI command</label>
+                        <div class="input-group">
+                            <input id="input_cli" type="text" class="form-control">
+                            <div class="input-group-append">
+                                <button id="button_cli_send" class="btn btn-primary" type="button"
+                                    style="margin-left: 10px;">Send</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-2">
+                        <label for="interval_input">Monitoring interval</label>
+                        <div class="input-group">
+                            <input id="input_interval" type="text" class="form-control">
+                            <div class="input-group-append">
+                                <button id="button_interval_send" class="btn btn-primary" type="button"
+                                    style="margin-left: 10px;">Send</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="row mt-3">
+                <div class="col-md-9">
+                    <label>Interaction Result</label>
+                    <div class="input-group">
+                        <textarea id="cli_result" rows="4" cols="150" readonly>
+                    </textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- second column on page-->
+        <div class="col-md-6 p-1 ">
+            <figure class="highcharts-figure">
+                <div id="chart-div1"></div>
+            </figure>
+            <figure class="highcharts-figure">
+                <div id="chart-div2"></div>
+            </figure>
+
+
+            <!-- Container to display charts -->
+            <div id="chartContainer"></div>
+
+
+            <div>
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#ModalAddChart">
+                    Add Chart
+                </button>
+
+                <!-- <button type="button" class="btn btn-primary" id="add_device_submit2">Submit</button> -->
+            </div>
+
+
+
+            <!-- The Modal -->
+            <div class="modal" id="ModalAddChart">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+
+                        <!-- Modal Header -->
+                        <div class="modal-header">
+                            <h4 class="modal-title">Add chart</h4>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+
+                        <!-- Modal body -->
+                        <div class="modal-body">
+
+                            <div class="container">
+                                <div class="form-group row">
+                                    <div class="col-xs-2">
+                                        <label for="ex1">Enter chart name:</label>
+                                        <input name='chart_name' class="form-control" id="chart_name_id" type="text">
+                                        <label for="ex1">Enter parameter name:</label>
+                                        <input name='chart_param1' class="form-control" id="chart_param1" type="text">
+                                        <input name='chart_param2' class="form-control" id="chart_param2" type="text">
+                                    </div>
+                                    <div class="col-xs-2">
+                                        <label for="ex1">Enter chart config:</label>
+                                        <input name='chart_config' class="form-control" id="chart_config_id" type="text">
+                                    </div>
+                                </div>
+
+                                <img id="wait_add_chart" style="display:none;padding:3px"
+                                    src='/static/images/loading.gif' width="25" height="25" />
+                                <br>
+                                <br>
+                                <span id=result_add_chart></span>
+
+                            </div>
+
+                        </div>
+
+                        <!-- Modal footer -->
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-primary" id="add_chart_submit">Submit</button>
+                            <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Close</button>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+</div>
+
+
+
+
+
+
+
+<!-- <div class="dropdown">
+    <button class="btn btn-primary dropdown-toggle" type="button" id="dropdownMenuButton"
+        data-toggle="dropdown">
+        Device_Actions
+    </button>
+    <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+        <a class="dropdown-item disabled" href="#">Action</a> <a class="dropdown-item" href="#">Another
+            action</a> <a class="dropdown-item" href="#">Something else here</a>
+    </div>
+</div> -->
+
+
+{% endblock %}

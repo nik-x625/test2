@@ -1,0 +1,155 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+    {% include 'header.html' %}
+
+    <style>
+        html {
+            scroll-behavior: smooth;
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <!-- jQuery -->
+    <script src="static/js/jquery.min.js"></script>
+    <!-- jQuery Easing -->
+    <script src="static/js/jquery.easing.1.3.js"></script>
+    <!-- Bootstrap -->
+    <script src="static/js/bootstrap.min.js"></script>
+    <!-- Waypoints -->
+    <script src="static/js/jquery.waypoints.min.js"></script>
+    <!-- Stellar Parallax -->
+    <script src="static/js/jquery.stellar.min.js"></script>
+    <!-- YTPlayer -->
+    <!-- Owl carousel -->
+    <script src="static/js/owl.carousel.min.js"></script>
+    <!-- Magnific Popup -->
+    <script src="static/js/jquery.magnific-popup.min.js"></script>
+    <script src="static/js/magnific-popup-options.js"></script>
+    <!-- Counters -->
+    <script src="static/js/jquery.countTo.js"></script>
+    <!-- Main -->
+    <script src="static/js/main.js"></script>
+
+    <div class="colorlib-loader"></div>
+
+    <div id="page">
+        {% include 'nav.html' %}
+
+
+        <section id="home" class="video-hero"
+            style="height: 300px; background-image: url(/static/images/cover_img_1.jpg);  background-size:cover; background-position: center center;background-attachment:fixed;"
+            data-section="home">
+            <div class="overlay"></div>
+            <div class="display-t display-t2 text-center">
+                <div class="display-tc display-tc2">
+                    <div class="container">
+                        <div class="col-md-12 col-md-offset-0">
+                            <div class="animate-box">
+                                <h2>Privacy Policy</h2>
+                                <p>Utility Control iOS App</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <div class="container privacy-content">
+            <div class="row">
+                <div class="col-md-12">
+                    <h1>Privacy Policy for Utility Control iOS App</h1>
+
+                    <div class="privacy-section">
+                        <h2>Introduction</h2>
+                        <p>This privacy policy explains how we collect, use, and protect your personal information
+                            when you use our Utility Control iOS application.</p>
+                    </div>
+
+                    <div class="privacy-section">
+                        <h2>Information We Collect</h2>
+                        <ul>
+                            <li>Device information (model, OS version)</li>
+                            <li>Usage data (app interactions, features used)</li>
+                            <li>Account information (email, name) when you register</li>
+                            <li>Utility monitoring data</li>
+                        </ul>
+                    </div>
+
+                    <div class="privacy-section">
+                        <h2>How We Use Your Information</h2>
+                        <ul>
+                            <li>To provide and improve our services</li>
+                            <li>To monitor and analyze app usage</li>
+                            <li>To communicate with you about your account</li>
+                            <li>To ensure the security of our services</li>
+                        </ul>
+                    </div>
+
+                    <div class="privacy-section">
+                        <h2>Data Security</h2>
+                        <p>We implement appropriate security measures to protect your personal information against
+                            unauthorized access, alteration, disclosure, or destruction.</p>
+                    </div>
+
+                    <div class="privacy-section">
+                        <h2>Your Rights</h2>
+                        <p>You have the right to:</p>
+                        <ul>
+                            <li>Access your personal data</li>
+                            <li>Correct inaccurate data</li>
+                            <li>Request deletion of your data</li>
+                            <li>Opt-out of certain data collection</li>
+                        </ul>
+                    </div>
+
+                    <div class="privacy-section">
+                        <h2>Contact Us</h2>
+                        <p>If you have any questions about this Privacy Policy, please contact us at:</p>
+                        <p>Email: contact@qlines.net</p>
+                    </div>
+
+                    <div class="privacy-section">
+                        <h2>Changes to This Policy</h2>
+                        <p>We may update this privacy policy from time to time. We will notify you of any changes by
+                            posting the new policy on this page.</p>
+                        <p>Last updated: {{ last_updated }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% include 'footer.html' %}
+    </div>
+
+    <div class="gototop js-top">
+        <a href="#" class="js-gotop"><i class="icon-arrow-up2"></i></a>
+    </div>
+
+    <!-- jQuery -->
+    <script src="/static/js/jquery.min.js"></script>
+    <!-- jQuery Easing -->
+    <script src="/static/js/jquery.easing.1.3.js"></script>
+    <!-- Bootstrap -->
+    <script src="/static/js/bootstrap.min.js"></script>
+    <!-- Waypoints -->
+    <script src="/static/js/jquery.waypoints.min.js"></script>
+    <!-- Main -->
+    <script src="/static/js/main.js"></script>
+
+
+
+
+    {% include 'footer.html' %}
+
+    <div class="gototop js-top">
+        <a href="#" class="js-gotop"><i class="icon-arrow-up2"></i></a>
+    </div>
+
+</body>
+
+</html>

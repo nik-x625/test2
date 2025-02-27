@@ -1,0 +1,116 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+    {% include 'header.html' %}
+    <style>
+        html {
+            scroll-behavior: smooth;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- jQuery -->
+    <script src="static/js/jquery.min.js"></script>
+    <!-- jQuery Easing -->
+    <script src="static/js/jquery.easing.1.3.js"></script>
+    <!-- Bootstrap -->
+    <script src="static/js/bootstrap.min.js"></script>
+    <!-- Waypoints -->
+    <script src="static/js/jquery.waypoints.min.js"></script>
+    <!-- Stellar Parallax -->
+    <script src="static/js/jquery.stellar.min.js"></script>
+    <!-- YTPlayer -->
+    <!-- Owl carousel -->
+    <script src="static/js/owl.carousel.min.js"></script>
+    <!-- Magnific Popup -->
+    <script src="static/js/jquery.magnific-popup.min.js"></script>
+    <script src="static/js/magnific-popup-options.js"></script>
+    <!-- Counters -->
+    <script src="static/js/jquery.countTo.js"></script>
+    <!-- Main -->
+    <script src="static/js/main.js"></script>
+
+    <div class="colorlib-loader"></div>
+
+    <div id="page">
+        {% include 'nav.html' %}
+
+        <section id="home" class="video-hero"
+            style="height: 400px; background-image: url(static/images/cover_img_1.jpg);  background-size:cover; background-position: center center;background-attachment:fixed;"
+            data-section="home">
+            <div class="overlay"></div>
+            <a class="player"
+                data-property="{videoURL:'',containment:'#home', showControls:false, autoPlay:true, loop:true, mute:true, startAt:0, opacity:1, quality:'default'}"></a>
+            <div class="display-t text-center">
+                <div class="display-tc">
+                    <div class="container">
+                        <div class="col-md-12 col-md-offset-0">
+                            <div class="animate-box">
+                                <h2 style="color: white;" >Smooth out your remote access!</h2>
+                                <h1 style="color: white;" >Effortlessly deploy your devices, seamlessly monitor agents!</h1>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <div class="colorlib-services" id="productspage">
+            <div class="container">
+                <div class="row">
+
+                    <div class="col-md-4 text-center animate-box">
+                        <div class="services">
+                            <span class="icon">
+                                <i class="icon-envelop"></i>
+                            </span>
+                            <div class="desc">
+                                <h3>Remote control through central web dashboard</h3>
+                                <p>Keep eyes on the statistics from anywhere!</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4 text-center animate-box">
+                        <div class="services">
+                            <span class="icon">
+                                <i class="icon-mobile"></i>
+                            </span>
+                            <div class="desc">
+                                <h3>Cloud Integration</h3>
+                                <p>Manage and monitor your remote network centrally! Behind the NAT, Proxy, Firewal,
+                                    etc.? Our cloud access helps to reach out the devices!</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4 text-center animate-box">
+                        <div class="services">
+                            <span class="icon">
+                                <i class="icon-equalizer"></i>
+                            </span>
+                            <div class="desc">
+                                <h3>User friendly dashboard</h3>
+                                <p>Easy to use dashboard with analytics and statistics from the remote devices.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    {% include 'footer.html' %}
+
+    <div class="gototop js-top">
+        <a href="#" class="js-gotop"><i class="icon-arrow-up2"></i></a>
+    </div>
+
+</body>
+
+</html>
