@@ -1,110 +1,25 @@
+version: '3.8'
+
 services:
-  qlines_app_service:
-    build:
-      context: ./
-      dockerfile: Dockerfile_qlines
-    image: qlines_app_image
-
-    container_name: qlines_app_container
-    command: gunicorn -w 4 -b 0.0.0.0:5000 qlines:app --chdir /opt/qlines_app
-    #privileged: true
-    #restart: unless-stopped
+  web:
+    build: .
     ports:
-    #  - "7000-7100:7000-7100" # for mqtt and dbs
-    #- "80:5000"  # gunicorn
-    #- "127.0.0.1:8000:8000"
-    #- "127.0.0.1:8001:8001"
-    - "0.0.0.0:5000:5000"
-
-    restart: unless-stopped
-
+      - "8000:8000"
     volumes:
-      - ./:/opt/qlines_app
-
-    depends_on:
-      - redis
-      - rqworker
-
-
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
-      interval: 30s      # Run the health check every 30 seconds
-      retries: 3         # Retry 3 times before marking the container as unhealthy
-      start_period: 10s  # Wait 10 seconds before starting health checks
-      timeout: 5s        # Timeout after 5 seconds if the request does not complete      
-
-  mongo:
-    image: mongo
-    restart: always
-    container_name: qlines_mongo_container
+      - .:/app
     environment:
-      MONGO_INITDB_ROOT_USERNAME: root
-      MONGO_INITDB_ROOT_PASSWORD: example
-
-  # mongo-express:
-  #   image: mongo-express
-  #   restart: always
-  #   ports:
-  #     - 8081:8081
-  #   environment:
-  #     ME_CONFIG_MONGODB_ADMINUSERNAME: root
-  #     ME_CONFIG_MONGODB_ADMINPASSWORD: example
-  #     ME_CONFIG_MONGODB_URL: mongodb://root:example@mongo:27017/
-  #     ME_CONFIG_BASICAUTH: false
-
-  rqworker:
-    build:
-      context: ./
-      dockerfile: Dockerfile_qlines
-    container_name: qlines_rq_worker
-    image: qlines_rqworker_image
-    #command: rq worker
+      - FLASK_APP=app.py
+      - FLASK_ENV=development
+      - MONGO_URI=mongodb://mongodb:27017/chapters_db
     depends_on:
-      - redis
-    volumes:
-      - ./:/opt/qlines_app
-    environment:
-      - REDIS_URL=redis://redis:6379
-    command: [ "python", "/opt/qlines_app/rqworker.py" ]
-    restart: unless-stopped
+      - mongodb
 
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 30s      # Run the health check every 30 seconds
-      retries: 3         # Retry 3 times before marking the container as unhealthy
-      start_period: 10s  # Wait 10 seconds before starting health checks
-      timeout: 5s        # Timeout after 5 seconds if the command does not complete
-
-  redis:
-    image: redis:latest
-    container_name: qlines_redis_container
+  mongodb:
+    image: mongo:latest
     ports:
-      - "6379:6379"
-    restart: unless-stopped
-
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 30s      # Run the health check every 30 seconds
-      retries: 3         # Retry 3 times before marking the container as unhealthy
-      start_period: 10s  # Wait 10 seconds before starting health checks
-      timeout: 5s        
-
-  mosquitto:
-    image: eclipse-mosquitto:latest
-    container_name: general_mosquitto_container
-    ports:
-      - "1883:1883" # MQTT protocol port
-      - "9001:9001" # WebSockets (optional, if needed)
+      - "27017:27017"
     volumes:
-      - ./mosquitto:/mosquitto/config
-    restart: unless-stopped
+      - mongodb_data:/data/db
 
-networks:
-  # The network is assumed to be created already by the command "docker network create custom_qlines_bridge_network"
-  # Define a custom network named 'default' to be used by all services.
-  # This avoids the need to specify a network for each service individually.
-  # Ensure the network name is 'default' and set 'external' to 'true'.
-  # This allows the use of an existing network named 'custom_qlines_bridge_network'.
-  default:
-    external: true
-    name: custom_qlines_bridge_network
+volumes:
+  mongodb_data: 

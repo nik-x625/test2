@@ -1,0 +1,8 @@
+{% for chapter in chapters %}
+<div class="chapter-item p-2 hover:bg-gray-100 cursor-pointer rounded"
+     hx-get="/chapter/{{ chapter._id }}"
+     hx-target="#mainContent"
+     hx-swap="innerHTML">
+    {{ chapter.title }}
+</div>
+{% endfor %} 
