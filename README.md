@@ -1,4 +1,4 @@
-# Chapter Manager
+# SmartScope
 
 A modern web application for managing chapters and paragraphs with a beautiful, responsive interface. Built with Flask, HTMX, and MongoDB.
 
@@ -78,8 +78,8 @@ graph LR
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/chapter-manager.git
-   cd chapter-manager
+   git clone https://github.com/yourusername/smartscope.git
+   cd smartscope
    ```
 
 2. Start the application:
@@ -97,7 +97,7 @@ The application uses hot-reloading, so any changes you make to the code will be 
 ## Project Structure
 
 ```
-chapter-manager/
+smartscope/
 ├── app.py              # Flask application
 ├── docker-compose.yml  # Docker Compose configuration
 ├── Dockerfile         # Docker configuration
