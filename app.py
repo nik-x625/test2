@@ -2,25 +2,73 @@ from flask import Flask, render_template, request, jsonify
 from flask_pymongo import PyMongo
 from bson import ObjectId
 import os
+import logging
+from logging.handlers import RotatingFileHandler
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='static')
 app.config["MONGO_URI"] = os.getenv("MONGO_URI", "mongodb://localhost:27017/chapters_db")
 mongo = PyMongo(app)
 
+# Configure logging
+if not os.path.exists('logs'):
+    os.makedirs('logs')
+
+# Create a file handler
+file_handler = RotatingFileHandler('logs/app.log', maxBytes=5000000, backupCount=10)
+file_handler.setFormatter(logging.Formatter(
+    '%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'
+))
+file_handler.setLevel(logging.DEBUG)
+
+# Create a console handler
+console_handler = logging.StreamHandler()
+console_handler.setFormatter(logging.Formatter(
+    '%(asctime)s %(levelname)s: %(message)s'
+))
+console_handler.setLevel(logging.DEBUG)
+
+# Get the root logger
+logger = logging.getLogger()
+logger.setLevel(logging.DEBUG)
+logger.addHandler(file_handler)
+logger.addHandler(console_handler)
+
 @app.route('/')
 def index():
+    logger.info('Accessing index page')
     chapters = list(mongo.db.chapters.find())
+    logger.debug(f'Found {len(chapters)} chapters')
     return render_template('index.html', chapters=chapters)
+
+
+
+@app.route('/test1')
+def test1():
+    logger.info('in test1')
+    chapters = list(mongo.db.chapters.find())
+    return render_template('test1.html', chapters=chapters)
+
+@app.route('/test2')
+def test2():
+    logger.info('in test2')
+    chapters = list(mongo.db.chapters.find())
+    return render_template('test2.html', chapters=chapters)
+
+
 
 @app.route('/chapter/<chapter_id>')
 def get_chapter(chapter_id):
+    logger.info(f'Fetching chapter with ID: {chapter_id}')
     chapter = mongo.db.chapters.find_one({'_id': ObjectId(chapter_id)})
     if chapter:
+        logger.debug(f'Found chapter: {chapter.get("title")}')
         return render_template('chapter.html', chapter=chapter)
+    logger.warning(f'Chapter not found with ID: {chapter_id}')
     return '', 404
 
 @app.route('/api/chapters', methods=['GET'])
 def get_chapters():
+    logger.debug('Fetching all chapters')
     chapters = list(mongo.db.chapters.find())
     return render_template('chapters_list.html', chapters=chapters)
 
@@ -29,35 +77,59 @@ def add_chapter():
     try:
         title = request.form.get('title')
         if not title:
+            logger.warning('Attempted to add chapter with empty title')
             return '', 400
         
+        logger.info(f'Adding new chapter: {title}')
         result = mongo.db.chapters.insert_one({
             'title': title,
             'paragraphs': []
         })
         
-        # Return just the new chapter HTML
         chapter = mongo.db.chapters.find_one({'_id': result.inserted_id})
+        logger.debug(f'Successfully added chapter with ID: {result.inserted_id}')
         return render_template('chapter_item.html', chapter=chapter)
     except Exception as e:
+        logger.error(f'Error adding chapter: {str(e)}', exc_info=True)
         return '', 400
 
 @app.route('/api/chapters/reorder', methods=['POST'])
 def reorder_chapters():
     try:
         chapter_ids = request.form.getlist('chapter_id')
+        if not chapter_ids:
+            logger.warning('Attempted to reorder chapters with no IDs provided')
+            return '', 400
+            
+        logger.info(f'Reordering {len(chapter_ids)} chapters')
+        # Update each chapter with its new order
         for index, chapter_id in enumerate(chapter_ids):
-            mongo.db.chapters.update_one(
-                {'_id': ObjectId(chapter_id)},
-                {'$set': {'order': index}}
-            )
-        return '', 200
+            try:
+                mongo.db.chapters.update_one(
+                    {'_id': ObjectId(chapter_id)},
+                    {'$set': {'order': index}}
+                )
+                logger.debug(f'Updated chapter {chapter_id} to order {index}')
+            except Exception as e:
+                logger.error(f'Error updating chapter {chapter_id}: {str(e)}', exc_info=True)
+                continue
+        
+        # Get the updated list of chapters
+        chapters = list(mongo.db.chapters.find().sort('order', 1))
+        logger.info('Successfully reordered chapters')
+        return render_template('chapters_list.html', chapters=chapters)
     except Exception as e:
-        return '', 400
+        logger.error(f'Error in reorder_chapters: {str(e)}', exc_info=True)
+        return '', 500
 
 @app.route('/api/chapters/<chapter_id>', methods=['DELETE'])
 def delete_chapter(chapter_id):
-    mongo.db.chapters.delete_one({'_id': ObjectId(chapter_id)})
+    logger.info(f'Attempting to delete chapter: {chapter_id}')
+    result = mongo.db.chapters.delete_one({'_id': ObjectId(chapter_id)})
+    if result.deleted_count:
+        logger.info(f'Successfully deleted chapter: {chapter_id}')
+    else:
+        logger.warning(f'Chapter not found for deletion: {chapter_id}')
     return '', 204
 
 @app.route('/api/chapters/<chapter_id>/paragraphs', methods=['POST'])
@@ -65,14 +137,18 @@ def add_paragraph(chapter_id):
     try:
         data = request.get_json()
         if not data or 'content' not in data:
+            logger.warning(f'Attempted to add paragraph to chapter {chapter_id} with invalid data')
             return jsonify({'error': 'Content is required'}), 400
             
+        logger.info(f'Adding paragraph to chapter: {chapter_id}')
         result = mongo.db.chapters.update_one(
             {'_id': ObjectId(chapter_id)},
             {'$push': {'paragraphs': {'content': data['content']}}}
         )
+        logger.debug(f'Successfully added paragraph to chapter: {chapter_id}')
         return jsonify({'success': True})
     except Exception as e:
+        logger.error(f'Error adding paragraph to chapter {chapter_id}: {str(e)}', exc_info=True)
         return jsonify({'error': str(e)}), 400
 
 @app.route('/api/chapters/<chapter_id>/paragraphs/<paragraph_index>', methods=['PUT'])
@@ -80,19 +156,24 @@ def update_paragraph(chapter_id, paragraph_index):
     try:
         data = request.get_json()
         if not data or 'content' not in data:
+            logger.warning(f'Attempted to update paragraph {paragraph_index} in chapter {chapter_id} with invalid data')
             return jsonify({'error': 'Content is required'}), 400
             
+        logger.info(f'Updating paragraph {paragraph_index} in chapter: {chapter_id}')
         result = mongo.db.chapters.update_one(
             {'_id': ObjectId(chapter_id)},
             {'$set': {f'paragraphs.{paragraph_index}.content': data['content']}}
         )
+        logger.debug(f'Successfully updated paragraph {paragraph_index} in chapter: {chapter_id}')
         return jsonify({'success': True})
     except Exception as e:
+        logger.error(f'Error updating paragraph {paragraph_index} in chapter {chapter_id}: {str(e)}', exc_info=True)
         return jsonify({'error': str(e)}), 400
 
 @app.route('/api/chapters/<chapter_id>/paragraphs/<paragraph_index>', methods=['DELETE'])
 def delete_paragraph(chapter_id, paragraph_index):
     try:
+        logger.info(f'Attempting to delete paragraph {paragraph_index} from chapter: {chapter_id}')
         result = mongo.db.chapters.update_one(
             {'_id': ObjectId(chapter_id)},
             {'$unset': {f'paragraphs.{paragraph_index}': ""}}
@@ -101,9 +182,63 @@ def delete_paragraph(chapter_id, paragraph_index):
             {'_id': ObjectId(chapter_id)},
             {'$pull': {'paragraphs': None}}
         )
+        logger.debug(f'Successfully deleted paragraph {paragraph_index} from chapter: {chapter_id}')
         return '', 204
     except Exception as e:
+        logger.error(f'Error deleting paragraph {paragraph_index} from chapter {chapter_id}: {str(e)}', exc_info=True)
         return jsonify({'error': str(e)}), 400
 
+@app.route('/api/chapters/<chapter_id>/edit', methods=['GET'])
+def edit_chapter(chapter_id):
+    try:
+        logger.info(f'Fetching chapter for edit: {chapter_id}')
+        chapter = mongo.db.chapters.find_one({'_id': ObjectId(chapter_id)})
+        if chapter:
+            return render_template('chapter_edit.html', chapter=chapter)
+        logger.warning(f'Chapter not found for edit: {chapter_id}')
+        return '', 404
+    except Exception as e:
+        logger.error(f'Error fetching chapter for edit: {str(e)}', exc_info=True)
+        return '', 500
+
+@app.route('/api/chapters/<chapter_id>/cancel', methods=['GET'])
+def cancel_edit(chapter_id):
+    try:
+        logger.info(f'Canceling edit for chapter: {chapter_id}')
+        chapter = mongo.db.chapters.find_one({'_id': ObjectId(chapter_id)})
+        if chapter:
+            return render_template('chapter_item.html', chapter=chapter)
+        logger.warning(f'Chapter not found for cancel: {chapter_id}')
+        return '', 404
+    except Exception as e:
+        logger.error(f'Error canceling chapter edit: {str(e)}', exc_info=True)
+        return '', 500
+
+@app.route('/api/chapters/<chapter_id>', methods=['PUT'])
+def update_chapter(chapter_id):
+    try:
+        title = request.form.get('title')
+        if not title:
+            logger.warning(f'Attempted to update chapter {chapter_id} with empty title')
+            return '', 400
+            
+        logger.info(f'Updating chapter {chapter_id} with title: {title}')
+        result = mongo.db.chapters.update_one(
+            {'_id': ObjectId(chapter_id)},
+            {'$set': {'title': title}}
+        )
+        
+        if result.modified_count:
+            chapter = mongo.db.chapters.find_one({'_id': ObjectId(chapter_id)})
+            logger.debug(f'Successfully updated chapter {chapter_id}')
+            return render_template('chapter_item.html', chapter=chapter)
+        else:
+            logger.warning(f'No changes made to chapter {chapter_id}')
+            return '', 400
+    except Exception as e:
+        logger.error(f'Error updating chapter {chapter_id}: {str(e)}', exc_info=True)
+        return '', 500
+
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', debug=True, port=8000) 
+    logger.info('Starting Flask application')
+    app.run(host='0.0.0.0', debug=True, port=8000)
