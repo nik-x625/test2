@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chapter Manager</title>
     <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 </head>
 <body class="bg-gray-100">
@@ -20,7 +21,7 @@
                           hx-on::after-request="this.reset()">
                         <input type="text" 
                                name="title" 
-                               class="w-full p-2 border rounded" 
+                               class="w-full p-2 border rounded"
                                placeholder="New chapter title"
                                required>
                         <button type="submit"
@@ -29,16 +30,18 @@
                         </button>
                     </form>
                 </div>
-                <div id="chaptersList" class="space-y-2">
+                <form id="chaptersList" class="space-y-2 sortable" hx-post="/api/chapters/reorder" hx-trigger="end">
+                    <div class="htmx-indicator">Reordering...</div>
                     {% for chapter in chapters %}
-                    <div class="chapter-item p-2 hover:bg-gray-100 cursor-pointer rounded"
+                    <div class="chapter-item p-2 hover:bg-gray-100 cursor-grab active:cursor-grabbing rounded"
                          hx-get="/chapter/{{ chapter._id }}"
                          hx-target="#mainContent"
                          hx-swap="innerHTML">
+                        <input type="hidden" name="chapter_id" value="{{ chapter._id }}">
                         {{ chapter.title }}
                     </div>
                     {% endfor %}
-                </div>
+                </form>
             </div>
         </div>
 
@@ -49,5 +52,30 @@
             </div>
         </div>
     </div>
+
+    <script>
+        htmx.onLoad(function(content) {
+            var sortables = content.querySelectorAll(".sortable");
+            for (var i = 0; i < sortables.length; i++) {
+                var sortable = sortables[i];
+                var sortableInstance = new Sortable(sortable, {
+                    animation: 150,
+                    ghostClass: 'bg-gray-200',
+                    filter: ".htmx-indicator",
+                    onMove: function (evt) {
+                        return evt.related.className.indexOf('htmx-indicator') === -1;
+                    },
+                    onEnd: function (evt) {
+                        this.option("disabled", true);
+                    }
+                });
+
+                // Re-enable sorting on the htmx:afterSwap event
+                sortable.addEventListener("htmx:afterSwap", function() {
+                    sortableInstance.option("disabled", false);
+                });
+            }
+        });
+    </script>
 </body>
 </html> 

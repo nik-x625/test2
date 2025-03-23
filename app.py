@@ -42,6 +42,19 @@ def add_chapter():
     except Exception as e:
         return '', 400
 
+@app.route('/api/chapters/reorder', methods=['POST'])
+def reorder_chapters():
+    try:
+        chapter_ids = request.form.getlist('chapter_id')
+        for index, chapter_id in enumerate(chapter_ids):
+            mongo.db.chapters.update_one(
+                {'_id': ObjectId(chapter_id)},
+                {'$set': {'order': index}}
+            )
+        return '', 200
+    except Exception as e:
+        return '', 400
+
 @app.route('/api/chapters/<chapter_id>', methods=['DELETE'])
 def delete_chapter(chapter_id):
     mongo.db.chapters.delete_one({'_id': ObjectId(chapter_id)})
