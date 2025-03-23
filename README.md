@@ -78,7 +78,7 @@ graph LR
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/smartscope.git
+   git clone git@github.com:mehdix625/smartscope.git
    cd smartscope
    ```
 
