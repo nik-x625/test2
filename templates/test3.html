@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Library Dashboard</title>
+    <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+    <link href="https://cdn.tailwindcss.com" rel="stylesheet">
+    <style>
+        .search-input {
+            border: 1px solid #e2e8f0;
+            transition: all 0.2s ease;
+        }
+        .search-input:focus {
+            outline: none;
+            border-color: #4a90e2;
+            box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.1);
+        }
+
+        .htmx-indicator {
+            display: none;
+        }
+        .htmx-request .htmx-indicator {
+            display: block;
+        }
+        .htmx-request.chapter-item {
+            opacity: 0.5;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div class="flex h-screen">
+        <!-- Sidebar -->
+        <div class="w-64 bg-white shadow-lg">
+            <div class="p-4">
+                <h1 class="text-xl font-semibold mb-4">Search the Library</h1>
+                
+                <!-- Search -->
+                <div class="mb-6">
+                    <div class="relative">
+                        <input type="text" 
+                               placeholder="Search" 
+                               class="w-full pl-8 pr-4 py-2 border rounded-md text-sm search-input"
+                               hx-get="/api/search"
+                               hx-trigger="keyup changed delay:500ms"
+                               hx-target="#searchResults">
+                        <svg class="w-4 h-4 absolute left-2.5 top-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        </svg>
+                    </div>
+                </div>
+
+                <!-- Search & Replace -->
+                <div class="mb-4">
+                    <h2 class="text-sm font-medium text-gray-600 mb-2">Search & Replace</h2>
+                </div>
+
+                <!-- Library Location -->
+                <div class="mb-4">
+                    <h2 class="text-sm font-medium text-gray-600 mb-2">Library Location</h2>
+                    <select class="w-full p-2 border rounded-md text-sm">
+                        <option>Search or browse your Library</option>
+                        <option>Sales Content</option>
+                        <option>Marketing</option>
+                        <option>Technical Docs</option>
+                    </select>
+                </div>
+
+                <!-- Tags -->
+                <div class="mb-4">
+                    <h2 class="text-sm font-medium text-gray-600 mb-2">Tags</h2>
+                    <input type="text" 
+                           placeholder="Search for Tags to filter by"
+                           class="w-full p-2 border rounded-md text-sm">
+                </div>
+
+                <!-- Language -->
+                <div class="mb-4">
+                    <h2 class="text-sm font-medium text-gray-600 mb-2">Language</h2>
+                    <select class="w-full p-2 border rounded-md text-sm">
+                        <option>All Languages</option>
+                        <option>English</option>
+                        <option>Spanish</option>
+                        <option>French</option>
+                    </select>
+                </div>
+
+                <!-- Options -->
+                <div class="space-y-2">
+                    <label class="flex items-center text-sm text-gray-600">
+                        <input type="checkbox" class="mr-2 border-gray-300 rounded"> 
+                        <span>Exact match</span>
+                    </label>
+                    <label class="flex items-center text-sm text-gray-600">
+                        <input type="checkbox" class="mr-2 border-gray-300 rounded"> 
+                        <span>Library Entries with Attachment(s) only</span>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 overflow-auto bg-gray-50">
+            <div class="max-w-5xl mx-auto p-6">
+                <!-- Header -->
+                <div class="flex justify-between items-center mb-6">
+                    <div class="flex items-center space-x-2">
+                        <button class="text-gray-600 hover:text-gray-800">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                            </svg>
+                        </button>
+                        <span class="text-sm text-gray-600">Back to Library</span>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <button class="text-sm text-blue-600 hover:text-blue-700">Create New Entry</button>
+                        <span class="text-gray-300">|</span>
+                        <button class="text-sm text-blue-600 hover:text-blue-700">Import Entries</button>
+                    </div>
+                </div>
+
+                <!-- Content -->
+                <div id="searchResults" class="space-y-4">
+                    {% for entry in entries %}
+                    <div class="bg-white rounded-lg shadow-sm p-4">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <div class="flex items-center space-x-2 mb-1">
+                                    <h3 class="text-lg font-medium text-gray-900">{{ entry.title }}</h3>
+                                    <span class="text-sm text-gray-500">{{ entry.category }}</span>
+                                </div>
+                                <div class="text-sm text-gray-500">Updated on {{ entry.date }}</div>
+                            </div>
+                            <div class="flex items-center space-x-3">
+                                <button class="text-gray-400 hover:text-gray-600">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html> 

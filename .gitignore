@@ -37,3 +37,9 @@ logs/
 .idea/
 *.swp
 *.swo 
+
+# System files
+.DS_Store
+
+# Reports
+report.xml 

@@ -42,6 +42,7 @@ def index():
 
 
 
+
 @app.route('/test1')
 def test1():
     logger.info('in test1')
@@ -54,6 +55,29 @@ def test2():
     chapters = list(mongo.db.chapters.find())
     return render_template('test2.html', chapters=chapters)
 
+@app.route('/test3')
+def test3():
+    logger.info('Accessing test3 page')
+    # Mock data for demonstration
+    entries = [
+        {"title": "Geographic Distribution", "category": "Sales Content/General/Organization", "date": "Dec 13, 2019", "score": 100},
+        {"title": "Customer Demographics", "category": "Market Research", "date": "Jan 15, 2020", "score": 95},
+        {"title": "Product Usage Statistics", "category": "Analytics", "date": "Feb 20, 2020", "score": 88},
+    ]
+    return render_template('test3.html', entries=entries)
+
+
+@app.route('/test4')
+def test4():
+    logger.info('Accessing test4 page')
+    # Mock data for demonstration
+    return render_template('test4.html')
+
+@app.route('/get_some_html')
+def get_some_html():
+    logger.info('Accessing get_some_html page')
+    # Mock data for demonstration
+    return "some new content from server is here!"
 
 
 @app.route('/chapter/<chapter_id>')
