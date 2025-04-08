@@ -36,12 +36,7 @@ logger.addHandler(console_handler)
 @app.route('/')
 def index():
     logger.info('Accessing index page')
-    chapters = list(mongo.db.chapters.find())
-    logger.debug(f'Found {len(chapters)} chapters')
-    return render_template('index.html', chapters=chapters)
-
-
-
+    return render_template('index.html')
 
 @app.route('/test1')
 def test1():
@@ -66,7 +61,6 @@ def test3():
     ]
     return render_template('test3.html', entries=entries)
 
-
 @app.route('/test4')
 def test4():
     logger.info('Accessing test4 page')
@@ -78,7 +72,6 @@ def get_some_html():
     logger.info('Accessing get_some_html page')
     # Mock data for demonstration
     return "some new content from server is here!"
-
 
 @app.route('/chapter/<chapter_id>')
 def get_chapter(chapter_id):
@@ -262,6 +255,26 @@ def update_chapter(chapter_id):
     except Exception as e:
         logger.error(f'Error updating chapter {chapter_id}: {str(e)}', exc_info=True)
         return '', 500
+
+@app.route('/templates')
+def templates():
+    logger.info('Accessing templates page')
+    return render_template('templates.html')
+
+@app.route('/dashboard')
+def dashboard():
+    logger.info('Accessing dashboard page')
+    return render_template('dashboard.html')
+
+@app.route('/users')
+def users():
+    logger.info('Accessing users page')
+    return render_template('users.html')
+
+@app.route('/settings')
+def settings():
+    logger.info('Accessing settings page')
+    return render_template('settings.html')
 
 if __name__ == '__main__':
     logger.info('Starting Flask application')
