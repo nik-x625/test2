@@ -35,7 +35,7 @@ logger.addHandler(console_handler)
 
 @app.route('/')
 def index():
-    logger.info('Accessing index page')
+    logger.info('Accessing root page, redirecting to dashboard')
     return render_template('index.html')
 
 @app.route('/test1')

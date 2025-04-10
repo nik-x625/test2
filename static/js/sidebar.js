@@ -1,5 +1,6 @@
 // Initialize sidebar functionality
 function initSidebar() {
+    console.log("initSidebar function called"); // Added for debugging
     const sidebar = document.getElementById('sidebar');
     const sidebarWrapper = document.getElementById('sidebarWrapper');
     const sidebarToggle = document.getElementById('sidebarToggle');
@@ -97,11 +98,11 @@ document.addEventListener('DOMContentLoaded', initSidebar);
 // Reinitialize on HTMX content swap
 document.body.addEventListener('htmx:afterSwap', function(evt) {
     // Update page title based on the loaded content
-    const pageTitle = document.getElementById('pageTitle');
-    if (pageTitle) {
-        const newTitle = evt.detail.target.querySelector('.card-title')?.textContent || 'Dashboard';
-        pageTitle.textContent = newTitle;
-    }
+    // const pageTitle = document.getElementById('pageTitle');
+    // if (pageTitle) {
+    //     const newTitle = evt.detail.target.querySelector('.card-title')?.textContent || 'Dashboard';
+    //     pageTitle.textContent = newTitle;
+    // }
     
     // Update active state in sidebar
     const menuButtons = document.querySelectorAll('.sidebar-menu-button');
@@ -116,5 +117,5 @@ document.body.addEventListener('htmx:afterSwap', function(evt) {
     }
     
     // Reinitialize sidebar functionality
-    initSidebar();
+    //initSidebar();
 }); 
