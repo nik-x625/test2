@@ -1,0 +1,63 @@
+<!-- Template Creation Form -->
+<div class="card mt-3">
+  <div class="card-body">
+    <h4 class="card-title text-light">New Template Parameters</h4>
+    {% if error %}
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+      {{ error }}
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endif %}
+    <form hx-post="/create-template" hx-target="#mainContent" novalidate>
+      <div class="row mb-3">
+        <div class="col-md-6">
+          <label for="title" class="form-label text-light">Title</label>
+          <input type="text" class="form-control bg-dark text-light border-secondary" id="title" name="title" required>
+        </div>
+        <div class="col-md-6">
+          <label for="product" class="form-label text-light">Product</label>
+          <input type="text" class="form-control bg-dark text-light border-secondary" id="product" name="product" required>
+        </div>
+      </div>
+      
+      <div class="row mb-3">
+        <div class="col-md-6">
+          <label for="version" class="form-label text-light">Version</label>
+          <input type="text" class="form-control bg-dark text-light border-secondary" id="version" name="version" required>
+        </div>
+        <div class="col-md-6">
+          <label for="status" class="form-label text-light">Status</label>
+          <select class="form-select bg-dark text-light border-secondary" id="status" name="status" required>
+            <option value="draft">Draft</option>
+            <option value="review">Review</option>
+            <option value="approved">Approved</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <label for="introduction" class="form-label text-light">Introduction</label>
+        <textarea class="form-control bg-dark text-light border-secondary" id="introduction" name="introduction" rows="3" required></textarea>
+      </div>
+
+      <div class="mb-3">
+        <label for="project_overview" class="form-label text-light">Project Overview</label>
+        <textarea class="form-control bg-dark text-light border-secondary" id="project_overview" name="project_overview" rows="3" required></textarea>
+      </div>
+
+      <div class="mb-3">
+        <label for="scope" class="form-label text-light">Scope</label>
+        <textarea class="form-control bg-dark text-light border-secondary" id="scope" name="scope" rows="3" required></textarea>
+      </div>
+
+      <div class="d-flex justify-content-end gap-2">
+        <button type="button" class="btn btn-outline-secondary" hx-get="/templates" hx-target="#mainContent">
+          Cancel
+        </button>
+        <button type="submit" class="btn btn-primary">
+          <i class="bi bi-save"></i> Save Template
+        </button>
+      </div>
+    </form>
+  </div>
+</div> 
