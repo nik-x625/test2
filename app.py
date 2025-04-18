@@ -332,8 +332,8 @@ def create_template():
 
 @app.route('/createdoc')
 def wizard():
-    templates = list(mongo.db.templates.find())
-    return render_template('wizard.html', templates=templates)
+    #templates = list(mongo.db.templates.find())
+    return render_template('wizard.html')#, templates=templates)
 
 @app.route('/wizard/step2/<template_id>')
 def wizard_step2(template_id):
