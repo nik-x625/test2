@@ -229,6 +229,11 @@ def templates():
     templates = list(mongo.db.templates.find())
     return render_template('templates.html', templates=templates)
 
+@app.route('/templates-list')
+def templates_list():
+    templates = list(mongo.db.templates.find())
+    return render_template('templates_list.html', templates=templates)
+
 @app.route('/delete-template/<template_id>', methods=['DELETE'])
 def delete_template(template_id):
     try:
@@ -236,13 +241,16 @@ def delete_template(template_id):
         result = mongo.db.templates.delete_one({'_id': ObjectId(template_id)})
         if result.deleted_count:
             logger.info(f'Successfully deleted template: {template_id}')
-            return '', 204
+            templates = list(mongo.db.templates.find())
+            return render_template('templates_list.html', templates=templates)
         else:
             logger.warning(f'Template not found for deletion: {template_id}')
-            return '', 404
+            templates = list(mongo.db.templates.find())
+            return render_template('templates_list.html', templates=templates)
     except Exception as e:
         logger.error(f'Error deleting template: {str(e)}', exc_info=True)
-        return '', 500
+        templates = list(mongo.db.templates.find())
+        return render_template('templates_list.html', templates=templates)
 
 @app.route('/edit-template/<template_id>')
 def edit_template(template_id):
@@ -256,6 +264,38 @@ def edit_template(template_id):
     except Exception as e:
         logger.error(f'Error fetching template for edit: {str(e)}', exc_info=True)
         return '', 500
+
+@app.route('/update-template/<template_id>', methods=['PUT'])
+def update_template(template_id):
+    try:
+        # Get form data
+        template_data = {
+            'title': request.form.get('title'),
+            'product': request.form.get('product'),
+            'version': request.form.get('version'),
+            'status': request.form.get('status'),
+            'introduction': request.form.get('introduction'),
+            'project_overview': request.form.get('project_overview'),
+            'scope': request.form.get('scope')
+        }
+        
+        # Update in MongoDB
+        result = mongo.db.templates.update_one(
+            {'_id': ObjectId(template_id)},
+            {'$set': template_data}
+        )
+        
+        if result.modified_count:
+            # Successfully updated
+            templates = list(mongo.db.templates.find())
+            return render_template('templates.html', templates=templates, message="Template updated successfully!")
+        else:
+            # Failed to update
+            return render_template('templates.html', templates=list(mongo.db.templates.find()), error="Failed to update template. Please try again.")
+            
+    except Exception as e:
+        logger.error(f"Error updating template: {str(e)}")
+        return render_template('templates.html', templates=list(mongo.db.templates.find()), error="An error occurred. Please try again.")
 
 @app.route('/template-form')
 def template_form():
@@ -275,20 +315,20 @@ def create_template():
             'scope': request.form.get('scope')
         }
         
-        # Insert into MongoDB using database service
-        result = db_service.create_template(template_data)
-        # Fetch updated templates list after creation
-        templates = db_service.get_all_templates()
-        if result:
+        # Insert into MongoDB
+        result = mongo.db.templates.insert_one(template_data)
+        
+        if result.inserted_id:
             # Successfully saved
-            return render_template('templates.html', message="Template created successfully!")
+            templates = list(mongo.db.templates.find())
+            return render_template('templates.html', templates=templates, message="Template created successfully!")
         else:
             # Failed to save
-            return render_template('template_form.html', error="Failed to create template. Please try again.")
+            return render_template('templates.html', templates=list(mongo.db.templates.find()), error="Failed to create template. Please try again.")
             
     except Exception as e:
         logger.error(f"Error creating template: {str(e)}")
-        return render_template('template_form.html', error="An error occurred. Please try again.")
+        return render_template('templates.html', templates=list(mongo.db.templates.find()), error="An error occurred. Please try again.")
 
 @app.route('/dashboard')
 def dashboard():
