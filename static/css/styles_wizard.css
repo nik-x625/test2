@@ -278,7 +278,7 @@ ul {
 }
 
 .template-card {
-  background-color: white;
+  background-color: var(--dark-surface);
   border-radius: var(--border-radius);
   padding: 2rem;
   box-shadow: var(--box-shadow);
@@ -286,11 +286,14 @@ ul {
   text-align: left;
   display: flex;
   flex-direction: column;
+  border: 1px solid var(--dark-border);
 }
 
 .template-card:hover {
   transform: translateY(-5px);
   box-shadow: var(--box-shadow-lg);
+  border-color: #0d6efd;
+  background-color: var(--dark-hover);
 }
 
 .template-icon {
@@ -311,11 +314,11 @@ ul {
 
 .template-card h3 {
   margin-bottom: 0.75rem;
-  color: var(--secondary-color);
+  color: var(--dark-text);
 }
 
 .template-card p {
-  color: var(--gray-600);
+  color: var(--dark-text-muted);
   margin-bottom: 1.5rem;
 }
 
@@ -454,10 +457,18 @@ footer {
 
 /* Wizard Styles */
 .wizard-header {
-  background-color: white;
+  background-color: var(--dark-surface);
   padding: 2rem 0;
   box-shadow: var(--box-shadow);
   margin-bottom: 2rem;
+  border-bottom: 1px solid var(--dark-border);
+}
+
+#template-title {
+  color: var(--dark-text);
+  font-size: 2rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
 }
 
 .wizard-progress {
@@ -479,19 +490,20 @@ footer {
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background-color: var(--gray-200);
-  color: var(--gray-600);
+  background-color: var(--dark-surface);
+  color: var(--dark-text-muted);
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 600;
   margin-bottom: 0.5rem;
   transition: var(--transition);
+  border: 2px solid var(--dark-border);
 }
 
 .step-label {
   font-size: 0.875rem;
-  color: var(--gray-600);
+  color: var(--dark-text-muted);
   font-weight: 500;
   transition: var(--transition);
 }
@@ -499,7 +511,7 @@ footer {
 .progress-connector {
   flex: 1;
   height: 2px;
-  background-color: var(--gray-200);
+  background-color: var(--dark-border);
   margin: 0 0.5rem;
   position: relative;
   top: -20px;
@@ -508,25 +520,66 @@ footer {
 
 .progress-step.active .step-number {
   background-color: var(--primary-color);
+  border-color: var(--primary-color);
   color: white;
 }
 
 .progress-step.active .step-label {
-  color: var(--primary-color);
+  color: var(--dark-text);
   font-weight: 600;
 }
 
 .progress-step.completed .step-number {
   background-color: var(--success-color);
+  border-color: var(--success-color);
   color: white;
 }
 
 .wizard-container {
-  background-color: white;
-  border-radius: var(--border-radius);
-  box-shadow: var(--box-shadow);
-  margin-bottom: 3rem;
-  overflow: hidden;
+  background-color: var(--dark-bg);
+  color: var(--dark-text);
+  min-height: 100vh;
+  padding: 20px;
+}
+
+.wizard-card {
+  background-color: var(--dark-surface);
+  border: 1px solid var(--dark-border);
+  border-radius: 8px;
+  padding: 24px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.wizard-header h3 {
+  color: var(--dark-text);
+}
+
+.wizard-header p {
+  color: var(--dark-text-muted);
+}
+
+.progress-steps::before {
+  background-color: var(--dark-border);
+}
+
+.step-circle {
+  background-color: var(--dark-surface);
+  border-color: var(--dark-border);
+  color: var(--dark-text-muted);
+}
+
+.step.active .step-circle {
+  background-color: #0d6efd;
+  border-color: #0d6efd;
+  color: white;
+}
+
+.step-label {
+  color: var(--dark-text-muted);
+}
+
+.step.active .step-label {
+  color: var(--dark-text);
 }
 
 .wizard-step {
@@ -556,7 +609,7 @@ footer {
   justify-content: space-between;
   margin-top: 2rem;
   padding-top: 2rem;
-  border-top: 1px solid var(--gray-200);
+  border-top: 1px solid var(--dark-border);
 }
 
 /* Section Selection */
@@ -567,7 +620,8 @@ footer {
 }
 
 .section-card {
-  border: 1px solid var(--gray-200);
+  background-color: var(--dark-surface);
+  border: 1px solid var(--dark-border);
   border-radius: var(--border-radius);
   padding: 1.5rem;
   transition: var(--transition);
@@ -575,7 +629,7 @@ footer {
 
 .section-card:hover {
   border-color: var(--primary-color);
-  box-shadow: 0 0 0 1px var(--primary-color);
+  background-color: var(--dark-hover);
 }
 
 .section-header {
@@ -593,13 +647,14 @@ footer {
 .section-header label {
   font-weight: 600;
   font-size: 1.1rem;
+  color: var(--dark-text);
   cursor: pointer;
 }
 
 .required-badge {
   font-size: 0.75rem;
   background-color: var(--warning-color);
-  color: var(--gray-800);
+  color: var(--dark-text);
   padding: 0.25rem 0.5rem;
   border-radius: 10px;
   margin-left: 0.75rem;
@@ -607,22 +662,23 @@ footer {
 }
 
 .section-card p {
-  color: var(--gray-600);
+  color: var(--dark-text-muted);
   margin-bottom: 0;
 }
 
 /* Content Editor */
 .content-editor {
   display: flex;
-  border: 1px solid var(--gray-200);
+  border: 1px solid var(--dark-border);
   border-radius: var(--border-radius);
   overflow: hidden;
+  background-color: var(--dark-surface);
 }
 
 .content-sidebar {
   width: 250px;
-  background-color: var(--gray-100);
-  border-right: 1px solid var(--gray-200);
+  background-color: var(--dark-hover);
+  border-right: 1px solid var(--dark-border);
 }
 
 .section-nav {
@@ -631,19 +687,21 @@ footer {
 
 .section-nav li {
   padding: 1rem;
-  border-bottom: 1px solid var(--gray-200);
+  border-bottom: 1px solid var(--dark-border);
   cursor: pointer;
   transition: var(--transition);
   font-weight: 500;
+  color: var(--dark-text-muted);
 }
 
 .section-nav li:hover {
-  background-color: var(--gray-200);
+  background-color: var(--dark-active);
+  color: var(--dark-text);
 }
 
 .section-nav li.active {
-  background-color: var(--primary-light);
-  color: var(--primary-color);
+  background-color: var(--dark-active);
+  color: var(--dark-text);
   font-weight: 600;
   border-left: 3px solid var(--primary-color);
 }
@@ -651,6 +709,7 @@ footer {
 .content-main {
   flex: 1;
   padding: 2rem;
+  background-color: var(--dark-surface);
 }
 
 .section-editor {
@@ -662,9 +721,10 @@ footer {
 }
 
 .section-editor h3 {
+  color: var(--dark-text);
   margin-bottom: 1.5rem;
   padding-bottom: 0.75rem;
-  border-bottom: 1px solid var(--gray-200);
+  border-bottom: 1px solid var(--dark-border);
 }
 
 .form-group {
@@ -675,6 +735,7 @@ footer {
   display: block;
   margin-bottom: 0.5rem;
   font-weight: 500;
+  color: var(--dark-text);
 }
 
 .form-group input,
@@ -682,11 +743,13 @@ footer {
 .form-group select {
   width: 100%;
   padding: 0.75rem;
-  border: 1px solid var(--gray-300);
+  border: 1px solid var(--dark-border);
   border-radius: var(--border-radius);
   font-family: inherit;
   font-size: 1rem;
   transition: var(--transition);
+  background-color: var(--dark-hover);
+  color: var(--dark-text);
 }
 
 .form-group input:focus,
@@ -699,9 +762,10 @@ footer {
 
 /* Document Preview */
 .document-preview {
-  border: 1px solid var(--gray-200);
+  border: 1px solid var(--dark-border);
   border-radius: var(--border-radius);
   overflow: hidden;
+  background-color: var(--dark-surface);
 }
 
 .preview-toolbar {
@@ -709,17 +773,18 @@ footer {
   justify-content: space-between;
   align-items: center;
   padding: 1rem;
-  background-color: var(--gray-100);
-  border-bottom: 1px solid var(--gray-200);
+  background-color: var(--dark-hover);
+  border-bottom: 1px solid var(--dark-border);
 }
 
 .preview-info h3 {
+  color: var(--dark-text);
   margin-bottom: 0.25rem;
 }
 
 .preview-date {
   font-size: 0.875rem;
-  color: var(--gray-600);
+  color: var(--dark-text-muted);
 }
 
 .preview-actions {
@@ -729,7 +794,7 @@ footer {
 
 .preview-document {
   padding: 3rem;
-  background-color: white;
+  background-color: var(--dark-surface);
   max-height: 600px;
   overflow-y: auto;
 }
@@ -740,7 +805,7 @@ footer {
 }
 
 .document-meta {
-  color: var(--gray-600);
+  color: var(--dark-text-muted);
   margin-bottom: 0.25rem;
 }
 
@@ -752,13 +817,14 @@ footer {
   color: var(--primary-color);
   margin-bottom: 1rem;
   padding-bottom: 0.5rem;
-  border-bottom: 1px solid var(--gray-200);
+  border-bottom: 1px solid var(--dark-border);
 }
 
 /* Export Options */
 .export-options {
   text-align: center;
   padding: 2rem;
+  background-color: var(--dark-surface);
 }
 
 .export-success {
@@ -784,16 +850,17 @@ footer {
   flex-direction: column;
   align-items: center;
   padding: 2rem;
-  border: 1px solid var(--gray-200);
+  border: 1px solid var(--dark-border);
   border-radius: var(--border-radius);
-  background-color: white;
+  background-color: var(--dark-hover);
   transition: var(--transition);
   cursor: pointer;
+  color: var(--dark-text);
 }
 
 .export-option:hover {
   border-color: var(--primary-color);
-  box-shadow: 0 0 0 1px var(--primary-color);
+  background-color: var(--dark-active);
 }
 
 .export-option i {
