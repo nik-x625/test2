@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Documents - DocWizard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <script src="https://unpkg.com/htmx.org@1.9.6"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/favicon.png') }}">
+</head>
+<body>
+    <div class="app-container">
+        <nav class="main-nav">
+            <div class="logo">
+                <a href="{{ url_for('index') }}">
+                    <i class="fas fa-file-contract"></i>
+                    <span>DocWizard</span>
+                </a>
+            </div>
+            <ul class="nav-links">
+                <li><a href="{{ url_for('index') }}">Home</a></li>
+                <li><a href="{{ url_for('documents') }}" class="active">Documents</a></li>
+                <li><a href="{{ url_for('index') }}#features">Features</a></li>
+                <li><a href="#" onclick="alert('Help documentation coming soon!')">Help</a></li>
+            </ul>
+            <div class="user-menu">
+                <button class="btn btn-outline" onclick="alert('Authentication coming soon!')">Sign In</button>
+            </div>
+        </nav>
+
+        <div class="container">
+            <div class="page-header">
+                <h1>My Documents</h1>
+                <a href="{{ url_for('index') }}#templates" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Create New Document
+                </a>
+            </div>
+            
+            <div class="documents-container">
+                {% if documents %}
+                <div class="documents-grid">
+                    {% for doc in documents %}
+                    <div class="document-card">
+                        <div class="document-icon">
+                            <i class="fas fa-file-alt"></i>
+                        </div>
+                        <div class="document-info">
+                            <h3>{{ doc.template_name }}</h3>
+                            <p class="document-date">Created: {{ doc.created_at_formatted }}</p>
+                            {% if doc.field_values.get('client_name') %}
+                            <p class="document-client">Client: {{ doc.field_values.get('client_name') }}</p>
+                            {% endif %}
+                        </div>
+                        <div class="document-actions">
+                            <a href="{{ url_for('view_document', document_id=doc._id) }}" class="btn btn-sm btn-outline">
+                                <i class="fas fa-eye"></i> View
+                            </a>
+                            <form action="{{ url_for('export_pdf') }}" method="post">
+                                <input type="hidden" name="document_id" value="{{ doc._id }}">
+                                <button type="submit" class="btn btn-sm btn-outline">
+                                    <i class="fas fa-download"></i> Download
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="empty-state">
+                    <div class="empty-icon">
+                        <i class="fas fa-file-circle-exclamation"></i>
+                    </div>
+                    <h2>No Documents Yet</h2>
+                    <p>You haven't created any documents yet. Get started by creating your first document.</p>
+                    <a href="{{ url_for('index') }}#templates" class="btn btn-primary">
+                        Create Your First Document
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <footer>
+            <div class="container">
+                <div class="footer-content">
+                    <div class="footer-logo">
+                        <i class="fas fa-file-contract"></i>
+                        <span>DocWizard</span>
+                    </div>
+                    <div class="footer-links">
+                        <div class="footer-column">
+                            <h4>Product</h4>
+                            <ul>
+                                <li><a href="{{ url_for('index') }}#features">Features</a></li>
+                                <li><a href="{{ url_for('index') }}#templates">Templates</a></li>
+                                <li><a href="#" onclick="alert('Pricing coming soon!')">Pricing</a></li>
+                            </ul>
+                        </div>
+                        <div class="footer-column">
+                            <h4>Resources</h4>
+                            <ul>
+                                <li><a href="#" onclick="alert('Documentation coming soon!')">Documentation</a></li>
+                                <li><a href="#" onclick="alert('Tutorials coming soon!')">Tutorials</a></li>
+                                <li><a href="#" onclick="alert('Blog coming soon!')">Blog</a></li>
+                            </ul>
+                        </div>
+                        <div class="footer-column">
+                            <h4>Company</h4>
+                            <ul>
+                                <li><a href="#" onclick="alert('About Us coming soon!')">About Us</a></li>
+                                <li><a href="#" onclick="alert('Contact coming soon!')">Contact</a></li>
+                                <li><a href="#" onclick="alert('Privacy Policy coming soon!')">Privacy Policy</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="footer-bottom">
+                    <p>&copy; {% now().year %} DocWizard. All rights reserved.</p>
+                </div>
+            </div>
+        </footer>
+    </div>
+</body>
+</html>

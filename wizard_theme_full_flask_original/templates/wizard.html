@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ template.name }} - DocWizard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <script src="https://unpkg.com/htmx.org@1.9.6"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/favicon.png') }}">
+</head>
+<body>
+    <div class="app-container">
+        <nav class="main-nav">
+            <div class="logo">
+                <a href="{{ url_for('index') }}">
+                    <i class="fas fa-file-contract"></i>
+                    <span>DocWizard</span>
+                </a>
+            </div>
+            <ul class="nav-links">
+                <li><a href="{{ url_for('index') }}">Home</a></li>
+                <li><a href="{{ url_for('documents') }}">Documents</a></li>
+                <li><a href="{{ url_for('index') }}#features">Features</a></li>
+                <li><a href="#" onclick="alert('Help documentation coming soon!')">Help</a></li>
+            </ul>
+            <div class="user-menu">
+                <button class="btn btn-outline" onclick="alert('Authentication coming soon!')">Sign In</button>
+            </div>
+        </nav>
+
+        <div class="wizard-header">
+            <div class="container">
+                <h1 id="template-title">{{ template.name }}</h1>
+                <div class="wizard-progress">
+                    <div class="progress-step active" data-step="1">
+                        <div class="step-number">1</div>
+                        <div class="step-label">Select Sections</div>
+                    </div>
+                    <div class="progress-connector"></div>
+                    <div class="progress-step" data-step="2">
+                        <div class="step-number">2</div>
+                        <div class="step-label">Fill Content</div>
+                    </div>
+                    <div class="progress-connector"></div>
+                    <div class="progress-step" data-step="3">
+                        <div class="step-number">3</div>
+                        <div class="step-label">Preview</div>
+                    </div>
+                    <div class="progress-connector"></div>
+                    <div class="progress-step" data-step="4">
+                        <div class="step-number">4</div>
+                        <div class="step-label">Export</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="container">
+            <div class="wizard-container">
+                <form id="document-form" hx-post="{{ url_for('preview') }}" hx-target="#preview-container" hx-swap="innerHTML" hx-trigger="wizardPreview from:body">
+                    <input type="hidden" name="template_id" value="{{ template._id }}">
+                    
+                    <!-- Step 1: Section Selection -->
+                    <div class="wizard-step active" id="step-1">
+                        <div class="wizard-step-header">
+                            <h2>Select Document Sections</h2>
+                            <p>Choose which sections to include in your document</p>
+                        </div>
+                        
+                        <div class="section-selection">
+                            {% for section in template.sections %}
+                            <div class="section-card">
+                                <div class="section-header">
+                                    <input type="checkbox" id="section-{{ section.id }}" name="included_sections" value="{{ section.id }}" 
+                                        {% if section.required %}checked disabled{% endif %}
+                                        hx-get="{{ url_for('api.section', template_id=template._id, section_id=section.id) }}"
+                                        hx-target="#section-editor"
+                                        hx-trigger="change"
+                                        onchange="updateProgress()">
+                                    <label for="section-{{ section.id }}">{{ section.title }}</label>
+                                    {% if section.required %}
+                                    <span class="required-badge">Required</span>
+                                    {% endif %}
+                                </div>
+                                <p>{{ section.description }}</p>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="wizard-actions">
+                            <a href="{{ url_for('index') }}" class="btn btn-outline">
+                                <i class="fas fa-arrow-left"></i> Back
+                            </a>
+                            <button type="button" class="btn btn-primary" onclick="goToStep(2)">
+                                Continue <i class="fas fa-arrow-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Step 2: Fill Content -->
+                    <div class="wizard-step" id="step-2">
+                        <div class="wizard-step-header">
+                            <h2>Fill in Content</h2>
+                            <p>Provide the details for each section of your document</p>
+                        </div>
+                        
+                        <div class="content-editor">
+                            <div class="content-sidebar">
+                                <ul class="section-nav" id="section-nav">
+                                    {% for section in template.sections %}
+                                    {% if section.required %}
+                                    <li data-section="{{ section.id }}" class="{% if loop.first %}active{% endif %}">{{ section.title }}</li>
+                                    {% else %}
+                                    <li data-section="{{ section.id }}" class="optional-section" style="display: none;">{{ section.title }}</li>
+                                    {% endif %}
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                            
+                            <div class="content-main">
+                                <div id="section-editor" class="section-content-container">
+                                    <!-- Section content will be loaded here via HTMX -->
+                                    <div class="placeholder-message">
+                                        <p>Select a section from the sidebar to edit its content</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="wizard-actions">
+                            <button type="button" class="btn btn-outline" onclick="goToStep(1)">
+                                <i class="fas fa-arrow-left"></i> Back
+                            </button>
+                            <button type="button" class="btn btn-primary" onclick="previewDocument()">
+                                Preview <i class="fas fa-arrow-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+                
+                <!-- Step 3: Preview -->
+                <div class="wizard-step" id="step-3">
+                    <div class="wizard-step-header">
+                        <h2>Document Preview</h2>
+                        <p>Review your document before exporting</p>
+                    </div>
+                    
+                    <div id="preview-container" class="document-preview">
+                        <!-- Preview content will be loaded here -->
+                    </div>
+                    
+                    <div class="wizard-actions">
+                        <button type="button" class="btn btn-outline" onclick="goToStep(2)">
+                            <i class="fas fa-arrow-left"></i> Back to Edit
+                        </button>
+                        <button type="button" class="btn btn-primary" onclick="goToStep(4)">
+                            Export <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Step 4: Export -->
+                <div class="wizard-step" id="step-4">
+                    <div class="wizard-step-header">
+                        <h2>Export Document</h2>
+                        <p>Your document is ready to export</p>
+                    </div>
+                    
+                    <div class="export-options">
+                        <div class="export-success">
+                            <div class="success-icon">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                            <h3>Document Ready!</h3>
+                            <p>Your {{ template.name }} has been successfully created.</p>
+                        </div>
+                        
+                        <div class="export-actions">
+                            <form id="export-form" action="{{ url_for('export_pdf') }}" method="post">
+                                <!-- Hidden fields will be populated by JavaScript -->
+                            </form>
+                            
+                            <button class="export-option" onclick="exportPDF()">
+                                <i class="fas fa-file-pdf"></i>
+                                <span>Export as PDF</span>
+                            </button>
+                            
+                            <button class="export-option" onclick="alert('Word export coming soon!')">
+                                <i class="fas fa-file-word"></i>
+                                <span>Export as Word</span>
+                            </button>
+                            
+                            <button class="export-option" onclick="alert('Save functionality coming soon!')">
+                                <i class="fas fa-save"></i>
+                                <span>Save to My Documents</span>
+                            </button>
+                            
+                            <button class="export-option" onclick="alert('Email functionality coming soon!')">
+                                <i class="fas fa-envelope"></i>
+                                <span>Email Document</span>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="wizard-actions">
+                        <button type="button" class="btn btn-outline" onclick="goToStep(3)">
+                            <i class="fas fa-arrow-left"></i> Back to Preview
+                        </button>
+                        <a href="{{ url_for('index') }}" class="btn btn-success">
+                            <i class="fas fa-home"></i> Return to Home
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <div class="container">
+                <div class="footer-content">
+                    <div class="footer-logo">
+                        <i class="fas fa-file-contract"></i>
+                        <span>DocWizard</span>
+                    </div>
+                    <div class="footer-links">
+                        <div class="footer-column">
+                            <h4>Product</h4>
+                            <ul>
+                                <li><a href="{{ url_for('index') }}#features">Features</a></li>
+                                <li><a href="{{ url_for('index') }}#templates">Templates</a></li>
+                                <li><a href="#" onclick="alert('Pricing coming soon!')">Pricing</a></li>
+                            </ul>
+                        </div>
+                        <div class="footer-column">
+                            <h4>Resources</h4>
+                            <ul>
+                                <li><a href="#" onclick="alert('Documentation coming soon!')">Documentation</a></li>
+                                <li><a href="#" onclick="alert('Tutorials coming soon!')">Tutorials</a></li>
+                                <li><a href="#" onclick="alert('Blog coming soon!')">Blog</a></li>
+                            </ul>
+                        </div>
+                        <div class="footer-column">
+                            <h4>Company</h4>
+                            <ul>
+                                <li><a href="#" onclick="alert('About Us coming soon!')">About Us</a></li>
+                                <li><a href="#" onclick="alert('Contact coming soon!')">Contact</a></li>
+                                <li><a href="#" onclick="alert('Privacy Policy coming soon!')">Privacy Policy</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="footer-bottom">
+                    <p>&copy; {% now().year %} DocWizard. All rights reserved.</p>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Initialize the wizard
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load the first section
+            const firstSection = document.querySelector('.section-nav li.active');
+            if (firstSection) {
+                loadSection(firstSection.getAttribute('data-section'));
+            }
+            
+            // Set up section navigation
+            document.querySelectorAll('.section-nav li').forEach(navItem => {
+                navItem.addEventListener('click', function() {
+                    // Update active nav item
+                    document.querySelectorAll('.section-nav li').forEach(item => {
+                        item.classList.remove('active');
+                    });
+                    this.classList.add('active');
+                    
+                    // Load the section content
+                    loadSection(this.getAttribute('data-section'));
+                });
+            });
+            
+            // Initialize section checkboxes
+            document.querySelectorAll('input[name="included_sections"]').forEach(checkbox => {
+                if (checkbox.checked && !checkbox.disabled) {
+                    const sectionId = checkbox.value;
+                    showSectionInNav(sectionId);
+                }
+            });
+        });
+        
+        // Navigation between wizard steps
+        function goToStep(stepNumber) {
+            // Hide all steps
+            document.querySelectorAll('.wizard-step').forEach(step => {
+                step.classList.remove('active');
+            });
+            
+            // Show the target step
+            document.getElementById(`step-${stepNumber}`).classList.add('active');
+            
+            // Update progress indicators
+            document.querySelectorAll('.progress-step').forEach(step => {
+                step.classList.remove('active', 'completed');
+                
+                const stepNum = parseInt(step.getAttribute('data-step'));
+                
+                if (stepNum < stepNumber) {
+                    step.classList.add('completed');
+                } else if (stepNum === stepNumber) {
+                    step.classList.add('active');
+                }
+            });
+            
+            // Scroll to top
+            window.scrollTo(0, 0);
+        }
+        
+        // Load section content
+        function loadSection(sectionId) {
+            const templateId = document.querySelector('input[name="template_id"]').value;
+            const url = `/api/section/${templateId}/${sectionId}`;
+            
+            fetch(url)
+                .then(response => response.text())
+                .then(html => {
+                    document.getElementById('section-editor').innerHTML = html;
+                    setupPlaceholderListeners();
+                })
+                .catch(error => {
+                    console.error('Error loading section:', error);
+                });
+        }
+        
+        // Update section navigation when checkboxes are changed
+        function updateProgress() {
+            document.querySelectorAll('input[name="included_sections"]').forEach(checkbox => {
+                const sectionId = checkbox.value;
+                if (checkbox.checked) {
+                    showSectionInNav(sectionId);
+                } else {
+                    hideSectionInNav(sectionId);
+                }
+            });
+        }
+        
+        function showSectionInNav(sectionId) {
+            const navItem = document.querySelector(`.section-nav li[data-section="${sectionId}"]`);
+            if (navItem) {
+                navItem.style.display = 'block';
+            }
+        }
+        
+        function hideSectionInNav(sectionId) {
+            const navItem = document.querySelector(`.section-nav li[data-section="${sectionId}"]`);
+            if (navItem) {
+                navItem.style.display = 'none';
+            }
+        }
+        
+        // Set up placeholder field listeners
+        function setupPlaceholderListeners() {
+            document.querySelectorAll('.placeholder').forEach(placeholder => {
+                placeholder.addEventListener('click', function() {
+                    const field = this.getAttribute('data-field');
+                    const input = document.getElementById(field);
+                    if (input) {
+                        input.focus();
+                    }
+                });
+            });
+            
+            document.querySelectorAll('.form-control').forEach(input => {
+                input.addEventListener('input', function() {
+                    const field = this.getAttribute('id');
+                    const value = this.value;
+                    
+                    document.querySelectorAll(`.placeholder[data-field="${field}"]`).forEach(placeholder => {
+                        if (value && value.trim() !== '') {
+                            placeholder.classList.add('filled');
+                            placeholder.textContent = value;
+                        } else {
+                            placeholder.classList.remove('filled');
+                            placeholder.textContent = placeholder.getAttribute('data-original-text') || field.replace(/_/g, ' ');
+                        }
+                    });
+                });
+            });
+        }
+        
+        // Preview document
+        function previewDocument() {
+            // Trigger the HTMX post
+            document.body.dispatchEvent(new Event('wizardPreview'));
+            
+            // Move to preview step
+            goToStep(3);
+        }
+        
+        // Export to PDF
+        function exportPDF() {
+            // Clone the form data from the main form
+            const mainForm = document.getElementById('document-form');
+            const exportForm = document.getElementById('export-form');
+            
+            // Clear previous form data
+            exportForm.innerHTML = '';
+            
+            // Copy all form fields
+            const formData = new FormData(mainForm);
+            for (const [name, value] of formData.entries()) {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = name;
+                input.value = value;
+                exportForm.appendChild(input);
+            }
+            
+            // Submit the form
+            exportForm.submit();
+        }
+    </script>
+</body>
+</html>

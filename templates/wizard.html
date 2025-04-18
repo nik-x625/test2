@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document Wizard</title>
+    <link rel="stylesheet" href="../static/css/styles_wizard.css">
+    <script src="https://unpkg.com/htmx.org@1.9.6"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="app-container">
+
+
+        <div class="wizard-header">
+            <div class="container">
+                <h1 id="template-title">Business Proposal</h1>
+                <div class="wizard-progress">
+                    <div class="progress-step active" data-step="1">
+                        <div class="step-number">1</div>
+                        <div class="step-label">Select Sections</div>
+                    </div>
+                    <div class="progress-connector"></div>
+                    <div class="progress-step" data-step="2">
+                        <div class="step-number">2</div>
+                        <div class="step-label">Fill Content</div>
+                    </div>
+                    <div class="progress-connector"></div>
+                    <div class="progress-step" data-step="3">
+                        <div class="step-number">3</div>
+                        <div class="step-label">Preview</div>
+                    </div>
+                    <div class="progress-connector"></div>
+                    <div class="progress-step" data-step="4">
+                        <div class="step-number">4</div>
+                        <div class="step-label">Export</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="container">
+            <div class="wizard-container">
+                <!-- Step 1: Section Selection -->
+                <div class="wizard-step active" id="step-1">
+                    <div class="wizard-step-header">
+                        <h2>Select Document Sections</h2>
+                        <p>Choose which sections to include in your document</p>
+                    </div>
+                    
+                    <div class="section-selection">
+                        <div class="section-card">
+                            <div class="section-header">
+                                <input type="checkbox" id="section-executive-summary" checked disabled>
+                                <label for="section-executive-summary">Executive Summary</label>
+                                <span class="required-badge">Required</span>
+                            </div>
+                            <p>An overview of the proposal and key benefits</p>
+                        </div>
+                        
+                        <div class="section-card">
+                            <div class="section-header">
+                                <input type="checkbox" id="section-company-background" checked>
+                                <label for="section-company-background">Company Background</label>
+                            </div>
+                            <p>Information about your company</p>
+                        </div>
+                        
+                        <div class="section-card">
+                            <div class="section-header">
+                                <input type="checkbox" id="section-problem-statement" checked>
+                                <label for="section-problem-statement">Problem Statement</label>
+                            </div>
+                            <p>Description of the client's challenges</p>
+                        </div>
+                        
+                        <div class="section-card">
+                            <div class="section-header">
+                                <input type="checkbox" id="section-proposed-solution" checked>
+                                <label for="section-proposed-solution">Proposed Solution</label>
+                            </div>
+                            <p>Your solution to the client's problems</p>
+                        </div>
+                        
+                        <div class="section-card">
+                            <div class="section-header">
+                                <input type="checkbox" id="section-methodology">
+                                <label for="section-methodology">Methodology</label>
+                            </div>
+                            <p>How you will implement the solution</p>
+                        </div>
+                        
+                        <div class="section-card">
+                            <div class="section-header">
+                                <input type="checkbox" id="section-timeline" checked>
+                                <label for="section-timeline">Timeline</label>
+                            </div>
+                            <p>Project schedule and milestones</p>
+                        </div>
+                        
+                        <div class="section-card">
+                            <div class="section-header">
+                                <input type="checkbox" id="section-pricing" checked>
+                                <label for="section-pricing">Pricing</label>
+                            </div>
+                            <p>Cost breakdown and payment terms</p>
+                        </div>
+                        
+                        <div class="section-card">
+                            <div class="section-header">
+                                <input type="checkbox" id="section-team">
+                                <label for="section-team">Team</label>
+                            </div>
+                            <p>Key personnel who will work on the project</p>
+                        </div>
+                        
+                        <div class="section-card">
+                            <div class="section-header">
+                                <input type="checkbox" id="section-terms" checked>
+                                <label for="section-terms">Terms and Conditions</label>
+                                <span class="required-badge">Required</span>
+                            </div>
+                            <p>Legal terms of the proposal</p>
+                        </div>
+                    </div>
+                    
+                    <div class="wizard-actions">
+                        <a href="index.html" class="btn btn-outline">
+                            <i class="fas fa-arrow-left"></i> Back
+                        </a>
+                        <button class="btn btn-primary" onclick="goToStep(2)">
+                            Continue <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Step 2: Fill Content -->
+                <div class="wizard-step" id="step-2">
+                    <div class="wizard-step-header">
+                        <h2>Fill in Content</h2>
+                        <p>Provide the details for each section of your document</p>
+                    </div>
+                    
+                    <div class="content-editor">
+                        <div class="content-sidebar">
+                            <ul class="section-nav">
+                                <li class="active" data-section="executive-summary">Executive Summary</li>
+                                <li data-section="company-background">Company Background</li>
+                                <li data-section="problem-statement">Problem Statement</li>
+                                <li data-section="proposed-solution">Proposed Solution</li>
+                                <li data-section="timeline">Timeline</li>
+                                <li data-section="pricing">Pricing</li>
+                                <li data-section="terms">Terms and Conditions</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="content-main">
+                            <div class="section-editor active" id="executive-summary-editor">
+                                <h3>Executive Summary</h3>
+                                
+                                <div class="form-group">
+                                    <label for="summary">Summary</label>
+                                    <textarea id="summary" rows="4" placeholder="Provide a brief overview of the proposal...">Our proposal offers a comprehensive solution to improve your company's customer relationship management through a customized software implementation.</textarea>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="key-benefits">Key Benefits</label>
+                                    <textarea id="key-benefits" rows="4" placeholder="List the main benefits of your proposal...">- Increase customer satisfaction by 25%
+- Reduce response time by 40%
+- Streamline internal processes
+- Provide actionable insights through data analytics</textarea>
+                                </div>
+                            </div>
+                            
+                            <div class="section-editor" id="company-background-editor">
+                                <h3>Company Background</h3>
+                                
+                                <div class="form-group">
+                                    <label for="company-name">Company Name</label>
+                                    <input type="text" id="company-name" placeholder="Your company name" value="TechSolutions Inc.">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="company-description">Company Description</label>
+                                    <textarea id="company-description" rows="4" placeholder="Describe your company...">TechSolutions Inc. is a leading provider of software solutions with over 10 years of experience in the industry. We specialize in custom software development, system integration, and digital transformation.</textarea>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="years-in-business">Years in Business</label>
+                                    <input type="text" id="years-in-business" placeholder="e.g., 10" value="12">
+                                </div>
+                            </div>
+                            
+                            <!-- Other section editors would be here -->
+                        </div>
+                    </div>
+                    
+                    <div class="wizard-actions">
+                        <button class="btn btn-outline" onclick="goToStep(1)">
+                            <i class="fas fa-arrow-left"></i> Back
+                        </button>
+                        <button class="btn btn-primary" onclick="goToStep(3)">
+                            Preview <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Step 3: Preview -->
+                <div class="wizard-step" id="step-3">
+                    <div class="wizard-step-header">
+                        <h2>Document Preview</h2>
+                        <p>Review your document before exporting</p>
+                    </div>
+                    
+                    <div class="document-preview">
+                        <div class="preview-toolbar">
+                            <div class="preview-info">
+                                <h3>Business Proposal</h3>
+                                <span class="preview-date">Created: April 18, 2025</span>
+                            </div>
+                            <div class="preview-actions">
+                                <button class="btn btn-sm btn-outline">
+                                    <i class="fas fa-print"></i> Print
+                                </button>
+                                <button class="btn btn-sm btn-outline">
+                                    <i class="fas fa-share"></i> Share
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="preview-document">
+                            <div class="document-header">
+                                <h1>Business Proposal</h1>
+                                <p class="document-meta">Prepared by: TechSolutions Inc.</p>
+                                <p class="document-meta">Date: April 18, 2025</p>
+                            </div>
+                            
+                            <div class="document-section">
+                                <h2>Executive Summary</h2>
+                                <p>Our proposal offers a comprehensive solution to improve your company's customer relationship management through a customized software implementation.</p>
+                                <p><strong>Key Benefits:</strong></p>
+                                <ul>
+                                    <li>Increase customer satisfaction by 25%</li>
+                                    <li>Reduce response time by 40%</li>
+                                    <li>Streamline internal processes</li>
+                                    <li>Provide actionable insights through data analytics</li>
+                                </ul>
+                            </div>
+                            
+                            <div class="document-section">
+                                <h2>Company Background</h2>
+                                <p>TechSolutions Inc. is a leading provider of software solutions with over 10 years of experience in the industry. We specialize in custom software development, system integration, and digital transformation.</p>
+                                <p><strong>Years in Business:</strong> 12</p>
+                            </div>
+                            
+                            <div class="document-section">
+                                <h2>Problem Statement</h2>
+                                <p>Your company is currently facing challenges with customer data management, leading to delayed response times and missed opportunities. The current system is outdated and doesn't provide the necessary insights for decision-making.</p>
+                            </div>
+                            
+                            <div class="document-section">
+                                <h2>Proposed Solution</h2>
+                                <p>We propose implementing a custom CRM solution tailored to your specific needs. This solution will integrate with your existing systems and provide a unified platform for customer data management.</p>
+                                <p><strong>Key Features:</strong></p>
+                                <ul>
+                                    <li>Centralized customer database</li>
+                                    <li>Automated workflow management</li>
+                                    <li>Advanced reporting and analytics</li>
+                                    <li>Mobile access for field staff</li>
+                                </ul>
+                            </div>
+                            
+                            <!-- More sections would be here -->
+                        </div>
+                    </div>
+                    
+                    <div class="wizard-actions">
+                        <button class="btn btn-outline" onclick="goToStep(2)">
+                            <i class="fas fa-arrow-left"></i> Back to Edit
+                        </button>
+                        <button class="btn btn-primary" onclick="goToStep(4)">
+                            Export <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Step 4: Export -->
+                <div class="wizard-step" id="step-4">
+                    <div class="wizard-step-header">
+                        <h2>Export Document</h2>
+                        <p>Your document is ready to export</p>
+                    </div>
+                    
+                    <div class="export-options">
+                        <div class="export-success">
+                            <div class="success-icon">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                            <h3>Document Ready!</h3>
+                            <p>Your Business Proposal has been successfully created.</p>
+                        </div>
+                        
+                        <div class="export-actions">
+                            <button class="export-option">
+                                <i class="fas fa-file-pdf"></i>
+                                <span>Export as PDF</span>
+                            </button>
+                            
+                            <button class="export-option">
+                                <i class="fas fa-file-word"></i>
+                                <span>Export as Word</span>
+                            </button>
+                            
+                            <button class="export-option">
+                                <i class="fas fa-save"></i>
+                                <span>Save to My Documents</span>
+                            </button>
+                            
+                            <button class="export-option">
+                                <i class="fas fa-envelope"></i>
+                                <span>Email Document</span>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="wizard-actions">
+                        <button class="btn btn-outline" onclick="goToStep(3)">
+                            <i class="fas fa-arrow-left"></i> Back to Preview
+                        </button>
+                        <a href="index.html" class="btn btn-success">
+                            <i class="fas fa-home"></i> Return to Home
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+    </div>
+
+    <script>
+        // Simple navigation between wizard steps
+        function goToStep(stepNumber) {
+            // Hide all steps
+            document.querySelectorAll('.wizard-step').forEach(step => {
+                step.classList.remove('active');
+            });
+            
+            // Show the target step
+            document.getElementById(`step-${stepNumber}`).classList.add('active');
+            
+            // Update progress indicators
+            document.querySelectorAll('.progress-step').forEach(step => {
+                step.classList.remove('active', 'completed');
+                
+                const stepNum = parseInt(step.getAttribute('data-step'));
+                
+                if (stepNum < stepNumber) {
+                    step.classList.add('completed');
+                } else if (stepNum === stepNumber) {
+                    step.classList.add('active');
+                }
+            });
+        }
+        
+        // Section navigation in content editor
+        document.querySelectorAll('.section-nav li').forEach(navItem => {
+            navItem.addEventListener('click', function() {
+                // Update active nav item
+                document.querySelectorAll('.section-nav li').forEach(item => {
+                    item.classList.remove('active');
+                });
+                this.classList.add('active');
+                
+                // Show corresponding editor
+                const sectionId = this.getAttribute('data-section');
+                document.querySelectorAll('.section-editor').forEach(editor => {
+                    editor.classList.remove('active');
+                });
+                document.getElementById(`${sectionId}-editor`).classList.add('active');
+            });
+        });
+    </script>
+</body>
+</html>

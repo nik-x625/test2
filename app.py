@@ -330,6 +330,18 @@ def create_template():
         logger.error(f"Error creating template: {str(e)}")
         return render_template('templates.html', templates=list(mongo.db.templates.find()), error="An error occurred. Please try again.")
 
+@app.route('/createdoc')
+def wizard():
+    templates = list(mongo.db.templates.find())
+    return render_template('wizard.html', templates=templates)
+
+@app.route('/wizard/step2/<template_id>')
+def wizard_step2(template_id):
+    template = mongo.db.templates.find_one({'_id': ObjectId(template_id)})
+    if not template:
+        return "Template not found", 404
+    return render_template('wizard_step2.html', template=template)
+
 @app.route('/dashboard')
 def dashboard():
     logger.info('Accessing dashboard page')

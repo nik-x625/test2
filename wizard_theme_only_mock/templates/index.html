@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SoW/Proposal Wizard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <script src="https://unpkg.com/htmx.org@1.9.6"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>SoW/Proposal Wizard</h1>
+            <p>Create customized Statements of Work and Proposals</p>
+        </header>
+        
+        <main>
+            <section class="template-selection">
+                <h2>Select a Template</h2>
+                <div class="templates-grid">
+                    {% for template in templates %}
+                    <div class="template-card">
+                        <h3>{{ template.name }}</h3>
+                        <p>{{ template.sections|length }} sections available</p>
+                        <a href="{{ url_for('wizard', template_id=template._id) }}" class="btn">Use This Template</a>
+                    </div>
+                    {% endfor %}
+                </div>
+            </section>
+        </main>
+        
+        <footer>
+            <p>&copy; 2025 SoW Wizard</p>
+        </footer>
+    </div>
+</body>
+</html>

@@ -1,0 +1,43 @@
+<div class="section-edit-container">
+    <h3>{{ section.title }}</h3>
+    
+    <div class="section-content">
+        {{ section.content|safe }}
+    </div>
+    
+    <div class="placeholder-fields">
+        <h4>Fill in the details</h4>
+        
+        {% set placeholders = [] %}
+        {% for field, text in section.content|regex_findall('<span class="placeholder" data-field="([^"]+)">([^<]+)</span>') %}
+            {% if field not in placeholders %}
+                {% set _ = placeholders.append(field) %}
+                <div class="form-group">
+                    <label for="{{ field }}">{{ field|replace('_', ' ')|title }}</label>
+                    <input type="text" id="{{ field }}" name="{{ field }}" class="form-control"
+                           placeholder="{{ text }}" data-original-text="{{ text }}">
+                </div>
+            {% endif %}
+        {% endfor %}
+    </div>
+</div>
+
+<script>
+    // Update placeholders in real-time as user types
+    document.querySelectorAll('.placeholder-fields input').forEach(input => {
+        input.addEventListener('input', function() {
+            const field = this.id;
+            const value = this.value || this.placeholder;
+            
+            document.querySelectorAll(`.placeholder[data-field="${field}"]`).forEach(placeholder => {
+                if (value && value.trim() !== '') {
+                    placeholder.classList.add('filled');
+                    placeholder.textContent = value;
+                } else {
+                    placeholder.classList.remove('filled');
+                    placeholder.textContent = placeholder.getAttribute('data-original-text');
+                }
+            });
+        });
+    });
+</script>
