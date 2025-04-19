@@ -410,6 +410,145 @@ def delete_doc(doc_id):
     documents = list(mongo.db.documents.find())
     return render_template('docs_list.html', documents=documents)
 
+@app.route('/auto-save', methods=['POST'])
+def auto_save():
+    try:
+        data = request.form.to_dict()
+        
+        # If this is a new document (no _id), create a draft
+        if '_id' not in data:
+            # Generate a temporary ID for the draft
+            temp_id = str(ObjectId())
+            data['_id'] = temp_id
+            data['status'] = 'draft'
+            data['created_at'] = datetime.utcnow()
+            data['updated_at'] = datetime.utcnow()
+            
+            # Insert or update the draft
+            mongo.db.documents.update_one(
+                {'_id': temp_id},
+                {'$set': data},
+                upsert=True
+            )
+        else:
+            # Update existing document
+            doc_id = data.pop('_id')
+            data['updated_at'] = datetime.utcnow()
+            
+            mongo.db.documents.update_one(
+                {'_id': ObjectId(doc_id)},
+                {'$set': data}
+            )
+        
+        return '', 204  # No content response
+        
+    except Exception as e:
+        logger.error(f"Auto-save error: {str(e)}")
+        return '', 500
+
+@app.route('/add-chapter', methods=['GET'])
+def add_chapter_new():
+    try:
+        # Get the current chapter count from the request
+        chapter_count = int(request.args.get('count', 0))
+        chapter_index = chapter_count + 1
+        
+        # Get the current document ID if it exists
+        doc_id = request.args.get('doc_id')
+        
+        # Create a new chapter in the document if doc_id exists
+        if doc_id:
+            mongo.db.documents.update_one(
+                {'_id': ObjectId(doc_id)},
+                {'$push': {'chapters': {
+                    'title': f'Chapter {chapter_index}',
+                    'content': '',
+                    'subchapters': []
+                }}}
+            )
+        
+        return render_template('chapter_section.html', 
+                            chapter_index=chapter_index,
+                            chapter_number=chapter_index,
+                            chapter_title=f'Chapter {chapter_index}')
+    except Exception as e:
+        logger.error(f"Error adding chapter: {str(e)}")
+        return '', 500
+
+@app.route('/add-subchapter/<chapter_index>', methods=['GET'])
+def add_subchapter(chapter_index):
+    try:
+        # Get the current subchapter count from the request
+        subchapter_count = int(request.args.get('count', 0))
+        subchapter_index = subchapter_count + 1
+        
+        # Get the current document ID if it exists
+        doc_id = request.args.get('doc_id')
+        
+        # Add subchapter to the document if doc_id exists
+        if doc_id:
+            mongo.db.documents.update_one(
+                {'_id': ObjectId(doc_id)},
+                {'$push': {f'chapters.{int(chapter_index)-1}.subchapters': {
+                    'title': f'Subchapter {subchapter_index}',
+                    'content': ''
+                }}}
+            )
+        
+        return render_template('subchapter_section.html',
+                            chapter_index=chapter_index,
+                            subchapter_index=subchapter_index,
+                            chapter_number=chapter_index,
+                            subchapter_number=subchapter_index,
+                            subchapter_title=f'Subchapter {subchapter_index}')
+    except Exception as e:
+        logger.error(f"Error adding subchapter: {str(e)}")
+        return '', 500
+
+@app.route('/remove-chapter/<chapter_index>', methods=['DELETE'])
+def remove_chapter(chapter_index):
+    try:
+        # Get the current document ID if it exists
+        doc_id = request.args.get('doc_id')
+        
+        # Remove chapter from the document if doc_id exists
+        if doc_id:
+            mongo.db.documents.update_one(
+                {'_id': ObjectId(doc_id)},
+                {'$unset': {f'chapters.{int(chapter_index)-1}': 1}}
+            )
+            mongo.db.documents.update_one(
+                {'_id': ObjectId(doc_id)},
+                {'$pull': {'chapters': None}}
+            )
+        
+        return '', 204
+    except Exception as e:
+        logger.error(f"Error removing chapter: {str(e)}")
+        return '', 500
+
+@app.route('/remove-subchapter/<chapter_index>/<subchapter_index>', methods=['DELETE'])
+def remove_subchapter(chapter_index, subchapter_index):
+    try:
+        # Get the current document ID if it exists
+        doc_id = request.args.get('doc_id')
+        
+        # Remove subchapter from the document if doc_id exists
+        if doc_id:
+            mongo.db.documents.update_one(
+                {'_id': ObjectId(doc_id)},
+                {'$unset': {f'chapters.{int(chapter_index)-1}.subchapters.{int(subchapter_index)-1}': 1}}
+            )
+            mongo.db.documents.update_one(
+                {'_id': ObjectId(doc_id)},
+                {'$pull': {f'chapters.{int(chapter_index)-1}.subchapters': None}}
+            )
+        
+        return '', 204
+    except Exception as e:
+        logger.error(f"Error removing subchapter: {str(e)}")
+        return '', 500
+
 if __name__ == '__main__':
     logger.info('Starting Flask application')
     app.run(host='0.0.0.0', debug=True, port=8000)

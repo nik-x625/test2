@@ -47,18 +47,50 @@
                         <div class="collapse show" id="chaptersCollapse">
                           <ul class="document-sidebar-submenu">
                             <li class="document-sidebar-submenu-item">
-                              <button class="document-sidebar-submenu-button">
-                                <i class="bi bi-file-text"></i>
-                                <span>4.1 Chapter 1</span>
-                              </button>
+                              <div class="document-sidebar-item-container">
+                                <button class="document-sidebar-submenu-button">
+                                  <i class="bi bi-file-text"></i>
+                                  <span>4.1 Chapter 1</span>
+                                </button>
+                                <div class="document-sidebar-item-controls">
+                                  <button class="document-sidebar-control-btn" title="Add Subchapter">
+                                    <i class="bi bi-plus-circle"></i>
+                                  </button>
+                                  <button class="document-sidebar-control-btn" title="Remove Chapter">
+                                    <i class="bi bi-trash"></i>
+                                  </button>
+                                </div>
+                              </div>
                             </li>
                             <li class="document-sidebar-submenu-item">
-                              <button class="document-sidebar-submenu-button">
-                                <i class="bi bi-file-text"></i>
-                                <span>4.2 Chapter 2</span>
-                              </button>
+                              <div class="document-sidebar-item-container">
+                                <button class="document-sidebar-submenu-button">
+                                  <i class="bi bi-file-text"></i>
+                                  <span>4.2 Chapter 2</span>
+                                </button>
+                                <div class="document-sidebar-item-controls">
+                                  <button class="document-sidebar-control-btn" title="Add Subchapter">
+                                    <i class="bi bi-plus-circle"></i>
+                                  </button>
+                                  <button class="document-sidebar-control-btn" title="Remove Chapter">
+                                    <i class="bi bi-trash"></i>
+                                  </button>
+                                </div>
+                              </div>
                             </li>
                           </ul>
+                        </div>
+                      </li>
+                      <li class="document-sidebar-submenu-item">
+                        <div class="document-sidebar-add-chapter">
+                          <button class="document-sidebar-add-btn" 
+                                  hx-get="/add-chapter?count={{ chapters|length if chapters else 0 }}&doc_id={{ doc._id if doc else '' }}"
+                                  hx-target="#chaptersCollapse .document-sidebar-submenu"
+                                  hx-swap="beforeend"
+                                  title="Add New Chapter">
+                            <i class="bi bi-plus-circle"></i>
+                            <span>Add Chapter</span>
+                          </button>
                         </div>
                       </li>
                     </ul>
@@ -66,7 +98,6 @@
                 </li>
               </ul>
             </div>
-            
           </div>
         </div>
       </div>
@@ -92,7 +123,10 @@
               <div class="col-md-6">
                 <label for="title" class="form-label text-light">Title</label>
                 <input type="text" class="form-control bg-dark text-light" id="title" name="title" 
-                       value="{{ doc.title if doc else '' }}" required>
+                       value="{{ doc.title if doc else '' }}" required
+                       hx-post="/auto-save"
+                       hx-trigger="keyup changed delay:500ms"
+                       hx-target="#auto-save-status">
               </div>
             </div>
 
@@ -138,11 +172,17 @@
                         required>{{ doc.scope if doc else '' }}</textarea>
             </div>
       
-            <div class="d-flex justify-content-end gap-2">
-              <button type="button" class="btn btn-secondary" hx-get="/docs" hx-target="#mainContent">Cancel</button>
-              <button type="submit" class="btn btn-primary">
-                {% if doc %}Update{% else %}Create{% endif %} Document
-              </button>
+            <div class="d-flex justify-content-between align-items-center">
+              <div id="auto-save-status" class="text-muted small">
+                <i class="bi bi-check-circle-fill text-success"></i>
+                <span>All changes saved</span>
+              </div>
+              <div class="d-flex gap-2">
+                <button type="button" class="btn btn-secondary" hx-get="/docs" hx-target="#mainContent">Cancel</button>
+                <button type="submit" class="btn btn-primary">
+                  {% if doc %}Update{% else %}Create{% endif %} Document
+                </button>
+              </div>
             </div>
           </form>
         </div>
@@ -262,9 +302,65 @@
   transform: rotate(180deg);
 }
 
-.document-sidebar-divider {
-  border-color: var(--bs-gray-700);
-  margin: 0.75rem 0;
+/* Chapter Management Controls */
+.document-sidebar-item-container {
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.document-sidebar-item-controls {
+  display: none;
+  margin-left: auto;
+  padding-right: 0.5rem;
+}
+
+.document-sidebar-item-container:hover .document-sidebar-item-controls {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.document-sidebar-control-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  color: var(--bs-gray-500);
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.document-sidebar-control-btn:hover {
+  background: var(--bs-gray-800);
+  color: var(--bs-light);
+}
+
+.document-sidebar-add-chapter {
+  padding: 0.5rem 0;
+  margin-left: -0.75rem;
+}
+
+.document-sidebar-add-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  background: transparent;
+  border: 1px dashed var(--bs-gray-700);
+  color: var(--bs-gray-500);
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.document-sidebar-add-btn:hover {
+  background: var(--bs-gray-800);
+  color: var(--bs-light);
+  border-color: var(--bs-gray-600);
 }
 
 /* Responsive adjustments */
@@ -290,6 +386,43 @@ document.addEventListener('DOMContentLoaded', function() {
         chevron.classList.toggle('document-chevron-up');
       }
     });
+  });
+
+  // Auto-save status management
+  const autoSaveStatus = document.getElementById('auto-save-status');
+  const form = document.querySelector('form');
+  
+  // Load draft from sessionStorage if exists
+  const draft = sessionStorage.getItem('documentDraft');
+  if (draft) {
+    const formData = JSON.parse(draft);
+    Object.keys(formData).forEach(key => {
+      const input = form.querySelector(`[name="${key}"]`);
+      if (input) {
+        input.value = formData[key];
+      }
+    });
+  }
+
+  // Save form state to sessionStorage
+  form.addEventListener('input', function(e) {
+    const formData = new FormData(form);
+    const formObject = {};
+    formData.forEach((value, key) => {
+      formObject[key] = value;
+    });
+    sessionStorage.setItem('documentDraft', JSON.stringify(formObject));
+    
+    // Update auto-save status
+    autoSaveStatus.innerHTML = '<i class="bi bi-arrow-clockwise"></i> Saving changes...';
+  });
+
+  // Clear draft on successful submission
+  form.addEventListener('htmx:afterRequest', function(e) {
+    if (e.detail.successful) {
+      sessionStorage.removeItem('documentDraft');
+      autoSaveStatus.innerHTML = '<i class="bi bi-check-circle-fill text-success"></i> All changes saved';
+    }
   });
 });
 </script>
