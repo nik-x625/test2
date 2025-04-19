@@ -402,7 +402,7 @@ def edit_doc(doc_id):
     doc = mongo.db.documents.find_one({'_id': ObjectId(doc_id)})
     if not doc:
         return "Document not found", 404
-    return render_template('edit_doc.html', doc=doc)
+    return render_template('create_edit_document.html', doc=doc)
 
 @app.route('/delete-doc/<doc_id>', methods=['DELETE'])
 def delete_doc(doc_id):
