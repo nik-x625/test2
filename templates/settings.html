@@ -1,29 +1,180 @@
-<div class="card">
-  <div class="card-body">
-    <h3 class="card-title">Application Settings</h3>
-    <p class="card-text text-muted">
-      Configure your application settings and preferences here.
-    </p>
-    <div class="mt-4">
-      <div class="mb-3">
-        <label class="form-label">Theme</label>
-        <select class="form-select">
-          <option>Light</option>
-          <option>Dark</option>
-          <option>System</option>
-        </select>
-      </div>
-      <div class="mb-3">
-        <label class="form-label">Language</label>
-        <select class="form-select">
-          <option>English</option>
-          <option>Spanish</option>
-          <option>French</option>
-        </select>
-      </div>
+<!-- Main Container -->
+<div class="container py-4">
+  <!-- Page Header -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0 text-light">Settings</h2>
+    <div class="d-flex gap-2">
+      <button class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-counterclockwise"></i> Reset Changes
+      </button>
       <button class="btn btn-primary">
-        <i class="bi bi-save"></i> Save Changes
+        <i class="bi bi-save"></i> Save All Changes
       </button>
     </div>
   </div>
-</div> 
+
+  <!-- Settings Grid -->
+  <div class="row g-4">
+    <!-- General Settings -->
+    <div class="col-md-6">
+      <div class="card h-100">
+        <div class="card-body">
+          <h5 class="card-title d-flex align-items-center text-light">
+            <i class="bi bi-gear me-2"></i> General Settings
+          </h5>
+          <div class="mb-3">
+            <label class="form-label text-light">Theme</label>
+            <select class="form-select">
+              <option>Light</option>
+              <option>Dark</option>
+              <option>System</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label text-light">Language</label>
+            <select class="form-select">
+              <option>English</option>
+              <option>Spanish</option>
+              <option>French</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label text-light">Time Zone</label>
+            <select class="form-select">
+              <option>UTC</option>
+              <option>EST</option>
+              <option>PST</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Document Settings -->
+    <div class="col-md-6">
+      <div class="card h-100">
+        <div class="card-body">
+          <h5 class="card-title d-flex align-items-center text-light">
+            <i class="bi bi-file-earmark-text me-2"></i> Document Settings
+          </h5>
+          <div class="mb-3">
+            <label class="form-label text-light">Default Document Format</label>
+            <select class="form-select">
+              <option>PDF</option>
+              <option>DOCX</option>
+              <option>HTML</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label text-light">Auto-save Interval</label>
+            <select class="form-select">
+              <option>5 minutes</option>
+              <option>10 minutes</option>
+              <option>15 minutes</option>
+            </select>
+          </div>
+          <div class="form-check form-switch mb-3">
+            <input class="form-check-input" type="checkbox" id="versionControl">
+            <label class="form-check-label text-light" for="versionControl">Enable Version Control</label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Template Settings -->
+    <div class="col-md-6">
+      <div class="card h-100">
+        <div class="card-body">
+          <h5 class="card-title d-flex align-items-center text-light">
+            <i class="bi bi-layers me-2"></i> Template Settings
+          </h5>
+          <div class="mb-3">
+            <label class="form-label text-light">Default Template</label>
+            <select class="form-select">
+              <option>Business Proposal</option>
+              <option>Technical Specification</option>
+              <option>Project Plan</option>
+            </select>
+          </div>
+          <div class="form-check form-switch mb-3">
+            <input class="form-check-input" type="checkbox" id="autoLoadTemplate">
+            <label class="form-check-label text-light" for="autoLoadTemplate">Auto-load Last Used Template</label>
+          </div>
+          <div class="form-check form-switch mb-3">
+            <input class="form-check-input" type="checkbox" id="templateSuggestions">
+            <label class="form-check-label text-light" for="templateSuggestions">Enable Template Suggestions</label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Export Settings -->
+    <div class="col-md-6">
+      <div class="card h-100">
+        <div class="card-body">
+          <h5 class="card-title d-flex align-items-center text-light">
+            <i class="bi bi-download me-2"></i> Export Settings
+          </h5>
+          <div class="mb-3">
+            <label class="form-label text-light">Default Export Format</label>
+            <select class="form-select">
+              <option>PDF</option>
+              <option>DOCX</option>
+              <option>HTML</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label text-light">Export Quality</label>
+            <select class="form-select">
+              <option>Standard</option>
+              <option>High</option>
+              <option>Maximum</option>
+            </select>
+          </div>
+          <div class="form-check form-switch mb-3">
+            <input class="form-check-input" type="checkbox" id="autoExport">
+            <label class="form-check-label text-light" for="autoExport">Enable Auto-export on Save</label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Advanced Settings -->
+    <div class="col-12">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title d-flex align-items-center text-light">
+            <i class="bi bi-sliders me-2"></i> Advanced Settings
+          </h5>
+          <div class="row">
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label class="form-label text-light">API Key</label>
+                <div class="input-group">
+                  <input type="password" class="form-control" value="••••••••••••••••">
+                  <button class="btn btn-outline-secondary" type="button">
+                    <i class="bi bi-eye"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label class="form-label text-light">Webhook URL</label>
+                <input type="text" class="form-control" placeholder="https://">
+              </div>
+            </div>
+          </div>
+          <div class="form-check form-switch mb-3">
+            <input class="form-check-input" type="checkbox" id="debugMode">
+            <label class="form-check-label text-light" for="debugMode">Enable Debug Mode</label>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+

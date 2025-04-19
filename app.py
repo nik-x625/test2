@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, redirect, url_for
 from flask_pymongo import PyMongo
 from bson import ObjectId
 import os
@@ -335,6 +335,12 @@ def wizard():
     #templates = list(mongo.db.templates.find())
     return render_template('wizard.html')#, templates=templates)
 
+@app.route('/createdoc_vertical')
+def wizard_vertical():
+    #templates = list(mongo.db.templates.find())
+    return render_template('wizard_vertical.html')#, templates=templates)
+
+
 @app.route('/wizard/step2/<template_id>')
 def wizard_step2(template_id):
     template = mongo.db.templates.find_one({'_id': ObjectId(template_id)})
@@ -356,6 +362,53 @@ def users():
 def settings():
     logger.info('Accessing settings page')
     return render_template('settings.html')
+
+# Document Routes
+@app.route('/docs')
+def docs():
+    documents = list(mongo.db.documents.find())
+    return render_template('docs_list.html', documents=documents)
+
+@app.route('/create-document', methods=['GET', 'POST'])
+def create_document():
+    if request.method == 'POST':
+        doc_data = {
+            'title': request.form.get('title'),
+            'product': request.form.get('product'),
+            'version': request.form.get('version'),
+            'status': request.form.get('status'),
+            'content': request.form.get('content'),
+            'created_at': datetime.utcnow(),
+            'updated_at': datetime.utcnow()
+        }
+        mongo.db.documents.insert_one(doc_data)
+        return redirect(url_for('docs'))
+    return render_template('create_edit_document.html')
+
+@app.route('/edit-doc/<doc_id>', methods=['GET', 'POST'])
+def edit_doc(doc_id):
+    if request.method == 'POST':
+        doc_data = {
+            'title': request.form.get('title'),
+            'product': request.form.get('product'),
+            'version': request.form.get('version'),
+            'status': request.form.get('status'),
+            'content': request.form.get('content'),
+            'updated_at': datetime.utcnow()
+        }
+        mongo.db.documents.update_one({'_id': ObjectId(doc_id)}, {'$set': doc_data})
+        return redirect(url_for('docs'))
+    
+    doc = mongo.db.documents.find_one({'_id': ObjectId(doc_id)})
+    if not doc:
+        return "Document not found", 404
+    return render_template('edit_doc.html', doc=doc)
+
+@app.route('/delete-doc/<doc_id>', methods=['DELETE'])
+def delete_doc(doc_id):
+    mongo.db.documents.delete_one({'_id': ObjectId(doc_id)})
+    documents = list(mongo.db.documents.find())
+    return render_template('docs_list.html', documents=documents)
 
 if __name__ == '__main__':
     logger.info('Starting Flask application')
