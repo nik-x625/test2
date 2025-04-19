@@ -1,133 +1,147 @@
-# SmartScope
+# SmartScope Documentation Management System
 
-A modern web application for managing chapters and paragraphs with a beautiful, responsive interface. Built with Flask, HTMX, and MongoDB.
+A modern documentation management system built with Flask, HTMX, and MongoDB, featuring a dark theme and responsive design.
 
 ## Features
 
-- 📝 Create and manage chapters
-- 📋 Drag-and-drop chapter reordering
-- ✏️ Edit chapter titles inline
-- 🗑️ Delete chapters
-- 📄 Add and manage paragraphs within chapters
-- 🎨 Modern, responsive UI with Tailwind CSS
-- ⚡ Real-time updates with HTMX
-- 🐳 Docker support for easy deployment
+- **Document Management**
+  - Create, edit, and organize documents
+  - Hierarchical document structure with chapters and subchapters
+  - Auto-save functionality
+  - Draft management system
 
-## Tech Stack
+- **User Interface**
+  - Dark theme with Bootstrap 5
+  - Responsive design
+  - Interactive document tree
+  - Real-time content editing
+  - HTMX-powered dynamic updates
 
-- **Backend**: Flask (Python)
-- **Database**: MongoDB
-- **Frontend**: HTMX + Tailwind CSS
-- **JavaScript**: Sortable.js for drag-and-drop
-- **Containerization**: Docker & Docker Compose
-
-## Application Flow
-
-```mermaid
-graph TD
-    A[User Interface] --> B[HTMX Request]
-    B --> C[Flask Backend]
-    C --> D[MongoDB]
-    D --> C
-    C --> B
-    B --> A
-
-    subgraph "User Actions"
-        A1[View Chapters] --> A
-        A2[Add Chapter] --> A
-        A3[Edit Chapter] --> A
-        A4[Delete Chapter] --> A
-        A5[Reorder Chapters] --> A
-        A6[Manage Paragraphs] --> A
-    end
-
-    subgraph "Backend Operations"
-        C1[GET /] --> C
-        C2[POST /api/chapters] --> C
-        C3[PUT /api/chapters/:id] --> C
-        C4[DELETE /api/chapters/:id] --> C
-        C5[POST /api/chapters/reorder] --> C
-    end
-```
+- **Document Structure**
+  - Introduction
+  - Project Overview
+  - Scope
+  - Chapters and Subchapters
+  - Dynamic content management
 
 ## Architecture
 
-```mermaid
-graph LR
-    subgraph "Frontend"
-        A[HTML Templates] --> B[HTMX]
-        B --> C[Sortable.js]
-    end
+### Frontend
+- **Templates**
+  - `index.html`: Main application layout
+  - `create_edit_document.html`: Document creation and editing interface
+  - `docs_list.html`: Document listing and management
+  - `settings.html`: Application settings
 
-    subgraph "Backend"
-        D[Flask App] --> E[MongoDB]
-    end
+- **Static Assets**
+  - `styles.css`: Main application styles
+  - `styles_wizard.css`: Document creation wizard styles
+  - Custom icons and components
 
-    B <--> D
-    C --> B
-```
+### Backend
+- **Routes**
+  - Document Management:
+    - `/docs`: List all documents
+    - `/create-document`: Create new document
+    - `/edit-doc/<doc_id>`: Edit existing document
+    - `/delete-doc/<doc_id>`: Delete document
+  - Content Management:
+    - `/load-content/<section_id>`: Load document section content
+    - `/load-content/chapter/<chapter_number>`: Load chapter content
+    - `/save-content/<section_id>`: Save section content
+    - `/auto-save-content/<section_id>`: Auto-save content changes
+  - Auto-save:
+    - `/auto-save`: Handle document auto-save
 
-## Getting Started
+- **Database**
+  - MongoDB document structure:
+    ```json
+    {
+      "_id": ObjectId,
+      "title": String,
+      "product": String,
+      "version": String,
+      "status": String,
+      "introduction": String,
+      "project_overview": String,
+      "scope": String,
+      "chapters": [
+        {
+          "number": Integer,
+          "title": String,
+          "content": String,
+          "subchapters": [
+            {
+              "number": Integer,
+              "title": String,
+              "content": String
+            }
+          ]
+        }
+      ],
+      "created_at": DateTime,
+      "updated_at": DateTime
+    }
+    ```
 
-### Prerequisites
+## Workflows
 
-- Docker and Docker Compose
-- Git
+### Document Creation
+1. User clicks "New Document"
+2. System creates a draft document in MongoDB
+3. User fills in document metadata (title, product, version)
+4. User navigates through document sections using sidebar
+5. Content is auto-saved as user types
+6. User can manually save changes
+7. Document status can be set to draft, review, or published
 
-### Installation
+### Content Editing
+1. User clicks a section in the document tree
+2. Content editor loads in the main panel
+3. Changes are auto-saved after 500ms of inactivity
+4. User can manually save changes
+5. Content is preserved between section navigation
 
-1. Clone the repository:
+### Document Management
+1. Documents are listed with their metadata
+2. Users can edit, delete, or view documents
+3. Document status is clearly indicated
+4. Changes are tracked with timestamps
+
+## Setup and Installation
+
+1. Clone the repository
+2. Install dependencies:
    ```bash
-   git clone git@github.com:mehdix625/smartscope.git
-   cd smartscope
+   pip install -r requirements.txt
+   ```
+3. Configure MongoDB connection in `app.py`
+4. Run the application:
+   ```bash
+   python app.py
    ```
 
-2. Start the application:
-   ```bash
-   docker-compose up --build
-   ```
+## Development
 
-3. Access the application:
-   Open your browser and navigate to `http://localhost:8000`
+### Adding New Features
+1. Create new routes in `app.py`
+2. Add corresponding templates
+3. Update static assets as needed
+4. Test with HTMX interactions
 
-### Development
-
-The application uses hot-reloading, so any changes you make to the code will be reflected immediately in the browser.
-
-## Project Structure
-
-```
-smartscope/
-├── app.py              # Flask application
-├── docker-compose.yml  # Docker Compose configuration
-├── Dockerfile         # Docker configuration
-├── requirements.txt   # Python dependencies
-├── static/           # Static files (JS, CSS)
-├── templates/        # HTML templates
-└── logs/            # Application logs
-```
-
-## API Endpoints
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/` | Display main page |
-| GET | `/chapter/<id>` | Get chapter details |
-| POST | `/api/chapters` | Create new chapter |
-| PUT | `/api/chapters/<id>` | Update chapter |
-| DELETE | `/api/chapters/<id>` | Delete chapter |
-| POST | `/api/chapters/reorder` | Reorder chapters |
-| POST | `/api/chapters/<id>/paragraphs` | Add paragraph |
-| PUT | `/api/chapters/<id>/paragraphs/<index>` | Update paragraph |
-| DELETE | `/api/chapters/<id>/paragraphs/<index>` | Delete paragraph |
+### Styling Guidelines
+- Use Bootstrap 5 classes
+- Follow dark theme color scheme
+- Maintain responsive design
+- Use HTMX for dynamic updates
 
 ## Contributing
 
 1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+2. Create a feature branch
+3. Commit your changes
+4. Push to the branch
+5. Create a Pull Request
 
 ## License
 
