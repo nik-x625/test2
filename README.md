@@ -26,6 +26,174 @@ A modern documentation management system built with Flask, HTMX, and MongoDB, fe
 
 ## Architecture
 
+### Component Architecture
+
+```mermaid
+graph TD
+    subgraph Frontend
+        A[Main Layout] --> B[Document Tree]
+        A --> C[Content Editor]
+        B --> D[HTMX Events]
+        C --> D
+        D --> E[Auto-save]
+    end
+
+    subgraph Backend
+        F[Flask App] --> G[MongoDB]
+        D --> F
+        E --> F
+    end
+
+    subgraph Data Flow
+        H[User Actions] --> D
+        D --> I[Content Updates]
+        I --> E
+        E --> J[Database]
+    end
+```
+
+### Document Structure Flow
+
+```mermaid
+graph LR
+    A[Document] --> B[Metadata]
+    A --> C[Introduction]
+    A --> D[Project Overview]
+    A --> E[Scope]
+    A --> F[Chapters]
+    
+    F --> G[Chapter 1]
+    F --> H[Chapter 2]
+    F --> I[Chapter N]
+    
+    G --> J[Subchapters]
+    H --> K[Subchapters]
+    I --> L[Subchapters]
+```
+
+## Workflows
+
+### Document Creation Flow
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant UI
+    participant Backend
+    participant DB
+
+    User->>UI: Click "New Document"
+    UI->>Backend: POST /create-document
+    Backend->>DB: Create Draft Document
+    DB-->>Backend: Document Created
+    Backend-->>UI: Load Document Editor
+    UI->>User: Show Document Tree
+    
+    loop Content Editing
+        User->>UI: Edit Content
+        UI->>Backend: Auto-save Content
+        Backend->>DB: Update Document
+    end
+```
+
+### Content Management Flow
+
+```mermaid
+stateDiagram-v2
+    [*] --> DocumentList
+    DocumentList --> DocumentEditor: Select Document
+    DocumentEditor --> ContentEditor: Select Section
+    ContentEditor --> AutoSave: Edit Content
+    AutoSave --> ContentEditor: Save Changes
+    ContentEditor --> DocumentEditor: Navigate
+    DocumentEditor --> DocumentList: Save & Exit
+```
+
+### Auto-save Mechanism
+
+```mermaid
+graph LR
+    A[User Input] --> B{Debounce Timer}
+    B -->|500ms| C[HTMX Request]
+    C --> D[Backend]
+    D --> E[MongoDB]
+    E --> F[Success Response]
+    F --> G[Update Status]
+```
+
+### Document Tree Navigation
+
+```mermaid
+graph TD
+    A[Document Tree] --> B[Introduction]
+    A --> C[Project Overview]
+    A --> D[Scope]
+    A --> E[Chapters]
+    
+    E --> F[Chapter 1]
+    E --> G[Chapter 2]
+    
+    F --> H[Subchapter 1.1]
+    F --> I[Subchapter 1.2]
+    
+    G --> J[Subchapter 2.1]
+    G --> K[Subchapter 2.2]
+    
+    style A fill:#2d3748,stroke:#4a5568
+    style B fill:#2d3748,stroke:#4a5568
+    style C fill:#2d3748,stroke:#4a5568
+    style D fill:#2d3748,stroke:#4a5568
+    style E fill:#2d3748,stroke:#4a5568
+    style F fill:#2d3748,stroke:#4a5568
+    style G fill:#2d3748,stroke:#4a5568
+    style H fill:#2d3748,stroke:#4a5568
+    style I fill:#2d3748,stroke:#4a5568
+    style J fill:#2d3748,stroke:#4a5568
+    style K fill:#2d3748,stroke:#4a5568
+```
+
+### Frontend Components
+
+```mermaid
+graph TD
+    subgraph Layout
+        A[Main Container] --> B[Sidebar]
+        A --> C[Content Area]
+    end
+
+    subgraph Sidebar
+        B --> D[Document Tree]
+        D --> E[Section Items]
+        E --> F[Chapter Items]
+        F --> G[Subchapter Items]
+    end
+
+    subgraph Content
+        C --> H[Editor Header]
+        C --> I[Content Editor]
+        C --> J[Save Controls]
+    end
+```
+
+### Backend Services
+
+```mermaid
+graph LR
+    subgraph API
+        A[HTMX Endpoints] --> B[Document Service]
+        A --> C[Content Service]
+        A --> D[Auto-save Service]
+    end
+
+    subgraph Database
+        B --> E[MongoDB]
+        C --> E
+        D --> E
+    end
+```
+
+## Architecture
+
 ### Frontend
 - **Templates**
   - `index.html`: Main application layout
