@@ -41,40 +41,6 @@ def index():
     logger.info('Accessing root page, redirecting to dashboard')
     return render_template('index.html')
 
-@app.route('/test1')
-def test1():
-    logger.info('in test1')
-    chapters = db_service.get_chapters()
-    return render_template('test1.html', chapters=chapters)
-
-@app.route('/test2')
-def test2():
-    logger.info('in test2')
-    chapters = db_service.get_chapters()
-    return render_template('test2.html', chapters=chapters)
-
-@app.route('/test3')
-def test3():
-    logger.info('Accessing test3 page')
-    # Mock data for demonstration
-    entries = [
-        {"title": "Geographic Distribution", "category": "Sales Content/General/Organization", "date": "Dec 13, 2019", "score": 100},
-        {"title": "Customer Demographics", "category": "Market Research", "date": "Jan 15, 2020", "score": 95},
-        {"title": "Product Usage Statistics", "category": "Analytics", "date": "Feb 20, 2020", "score": 88},
-    ]
-    return render_template('test3.html', entries=entries)
-
-@app.route('/test4')
-def test4():
-    logger.info('Accessing test4 page')
-    # Mock data for demonstration
-    return render_template('test4.html')
-
-@app.route('/get_some_html')
-def get_some_html():
-    logger.info('Accessing get_some_html page')
-    # Mock data for demonstration
-    return "some new content from server is here!"
 
 @app.route('/chapter/<chapter_id>')
 def get_chapter(chapter_id):
@@ -369,6 +335,9 @@ def docs():
     documents = list(mongo.db.documents.find())
     return render_template('docs_list.html', documents=documents)
 
+
+
+
 @app.route('/create-document', methods=['GET', 'POST'])
 def create_document():
     if request.method == 'POST':
@@ -404,6 +373,10 @@ def edit_doc(doc_id):
         return "Document not found", 404
     return render_template('create_edit_document.html', doc=doc)
 
+
+
+
+
 @app.route('/delete-doc/<doc_id>', methods=['DELETE'])
 def delete_doc(doc_id):
     mongo.db.documents.delete_one({'_id': ObjectId(doc_id)})
@@ -412,6 +385,7 @@ def delete_doc(doc_id):
 
 @app.route('/auto-save', methods=['POST'])
 def auto_save():
+    logger.info('Auto-saving document')
     try:
         data = request.form.to_dict()
         
