@@ -1,0 +1,51 @@
+<head>
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet" href="../static/css/styles_wizard.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" />
+
+  <!-- Bootstrap JS Bundle with Popper -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- HTMX -->
+  <style>
+    .fit-content {
+      width: fit-content;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container-fluid px-0">
+    <!-- Example 1: Using col-auto -->
+    <div class="row g-0 mb-3">
+      <div class="col-auto border">
+        <p class="text-nowrap">This column adjusts to content width xxxxxxxxxx </p>
+      </div>
+      <div class="col border">
+        <p>This column takes remaining space</p>
+      </div>
+    </div>
+
+    <!-- Example 2: Using w-auto -->
+    <div class="row g-0 mb-3">
+      <div class="col border">
+        <p class="w-auto">This paragraph adjusts to content width</p>
+      </div>
+      <div class="col border">
+        <p>This column takes remaining space</p>
+      </div>
+    </div>
+
+    <!-- Example 3: Using fit-content -->
+    <div class="row g-0">
+      <div class="col border">
+        <p class="fit-content">This paragraph fits its content</p>
+      </div>
+      <div class="col border">
+        <p>This column takes remaining space</p>
+      </div>
+    </div>
+  </div>
+
+</body>

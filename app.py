@@ -336,6 +336,24 @@ def docs():
     return render_template('docs_list.html', documents=documents)
 
 
+@app.route('/create-document3', methods=['GET', 'POST'])
+def create_document3():
+    if request.method == 'POST':
+        doc_data = {
+            'title': request.form.get('title'),
+            'product': request.form.get('product'),
+            'version': request.form.get('version'),
+            'status': request.form.get('status'),
+            'content': request.form.get('content'),
+            'created_at': datetime.utcnow(),
+            'updated_at': datetime.utcnow()
+        }
+        mongo.db.documents.insert_one(doc_data)
+        return redirect(url_for('docs'))
+    return render_template('create_doc_template3.html')
+
+
+
 
 
 @app.route('/create-document', methods=['GET', 'POST'])
