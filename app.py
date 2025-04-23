@@ -296,15 +296,6 @@ def create_template():
         logger.error(f"Error creating template: {str(e)}")
         return render_template('templates.html', templates=list(mongo.db.templates.find()), error="An error occurred. Please try again.")
 
-@app.route('/createdoc')
-def wizard():
-    #templates = list(mongo.db.templates.find())
-    return render_template('wizard.html')#, templates=templates)
-
-@app.route('/createdoc_vertical')
-def wizard_vertical():
-    #templates = list(mongo.db.templates.find())
-    return render_template('wizard_vertical.html')#, templates=templates)
 
 
 @app.route('/wizard/step2/<template_id>')
@@ -336,6 +327,31 @@ def docs():
     return render_template('docs_list.html', documents=documents)
 
 
+
+
+
+@app.route('/create-document1')
+def create_document1():
+    #templates = list(mongo.db.templates.find())
+    return render_template('wizard.html')#, templates=templates)
+
+@app.route('/create-document2', methods=['GET', 'POST'])
+def create_document2():
+    if request.method == 'POST':
+        doc_data = {
+            'title': request.form.get('title'),
+            'product': request.form.get('product'),
+            'version': request.form.get('version'),
+            'status': request.form.get('status'),
+            'content': request.form.get('content'),
+            'created_at': datetime.utcnow(),
+            'updated_at': datetime.utcnow()
+        }
+        mongo.db.documents.insert_one(doc_data)
+        return redirect(url_for('docs'))
+    return render_template('create_edit_document.html')
+
+
 @app.route('/create-document3', methods=['GET', 'POST'])
 def create_document3():
     if request.method == 'POST':
@@ -356,21 +372,6 @@ def create_document3():
 
 
 
-@app.route('/create-document', methods=['GET', 'POST'])
-def create_document():
-    if request.method == 'POST':
-        doc_data = {
-            'title': request.form.get('title'),
-            'product': request.form.get('product'),
-            'version': request.form.get('version'),
-            'status': request.form.get('status'),
-            'content': request.form.get('content'),
-            'created_at': datetime.utcnow(),
-            'updated_at': datetime.utcnow()
-        }
-        mongo.db.documents.insert_one(doc_data)
-        return redirect(url_for('docs'))
-    return render_template('create_edit_document.html')
 
 @app.route('/edit-doc/<doc_id>', methods=['GET', 'POST'])
 def edit_doc(doc_id):
