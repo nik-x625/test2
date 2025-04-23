@@ -4,12 +4,12 @@
     {% if item.children %}
       <div class="doc-item">
         <div class="doc-item-header" data-bs-toggle="collapse" data-bs-target="#collapse{{ collapse_id }}">
-          <i class="bi bi-folder me-2 text-light"></i>
+          <i class="bi bi-folder-fill me-2 text-light"></i>
           <span class="text-light">{{ item.title }}</span>
-          <i class="bi bi-chevron-right ms-auto text-light"></i>
+          <i class="bi bi-chevron-down ms-auto text-light"></i>
         </div>
         <div class="collapse" id="collapse{{ collapse_id }}">
-          <div class="ms-3 mt-2">
+          <div class="ms-3 mt-1">
             {{ render_sidebar(item.children, level+1, collapse_id ~ "_") }}
           </div>
         </div>
@@ -28,20 +28,33 @@
 <div class="container-fluid p-0">
   <div class="row g-0">
     <!-- Document structure navigation column -->
-    <div class="col-md-3" style="height: 100vh; overflow-y: auto; background-color: #212529; color: #dee2e6;">
+    <div class="col-md-3" style="height: 100vh; overflow-y: auto; background-color: #1e1e1e;">
       <div class="p-3">
-        <h5 class="mb-3 text-light">DOCUMENTATION</h5>
-        
-        <!-- Root documentation item -->
-        <div class="doc-item mb-2">
-          <div class="doc-item-header" data-bs-toggle="collapse" data-bs-target="#documentationCollapse">
-            <i class="bi bi-book me-2 text-light"></i>
-            <span class="text-light">Documentation</span>
-            <i class="bi bi-chevron-down ms-auto text-light"></i>
+        <div class="doc-card mb-3">
+          <div class="doc-card-header">
+            <h5 class="text-muted mb-3">Document Structure</h5>
           </div>
-          <div class="collapse show" id="documentationCollapse">
-            <div class="ms-3 mt-2">
-              {{ render_sidebar(document) }}
+          <div class="doc-card-body">
+            
+            <!-- Root documentation item -->
+            <div class="doc-item mb-2">
+              <div class="doc-item-header" data-bs-toggle="collapse" data-bs-target="#documentationCollapse">
+                <i class="bi bi-book-fill me-2 text-light"></i>
+                <span class="text-light">Documentation</span>
+                <i class="bi bi-chevron-down ms-auto text-light"></i>
+              </div>
+              <div class="collapse show" id="documentationCollapse">
+                <div class="ms-3 mt-2">
+                  {{ render_sidebar(document) }}
+                </div>
+              </div>
+            </div>
+            
+            <!-- Add Chapter button -->
+            <div class="add-chapter-btn mt-3">
+              <button class="btn btn-outline-secondary w-100 text-muted">
+                <i class="bi bi-plus-circle me-2"></i>Add Chapter
+              </button>
             </div>
           </div>
         </div>
@@ -68,12 +81,29 @@
 </div>
 
 <style>
+  .doc-card {
+    background-color: #212529;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  
+  .doc-card-header {
+    padding: 12px 16px;
+    background-color: #2c3136;
+    color: white;
+  }
+  
+  .doc-card-body {
+    padding: 16px;
+  }
+  
   .doc-item-header, .doc-item-content {
     display: flex;
     align-items: center;
-    padding: 8px 12px;
+    padding: 6px 8px;
     cursor: pointer;
     border-radius: 4px;
+    font-size: 0.95rem;
   }
   
   .doc-item-header:hover, .doc-item-content:hover {
@@ -82,6 +112,18 @@
   
   .doc-item {
     margin-bottom: 4px;
+  }
+  
+  .add-chapter-btn button {
+    border: 1px dashed #6c757d;
+    background-color: transparent;
+    color: #adb5bd;
+    font-size: 0.9rem;
+    padding: 8px;
+  }
+  
+  .add-chapter-btn button:hover {
+    background-color: rgba(255,255,255,0.05);
   }
 </style>
 
