@@ -356,21 +356,61 @@ def create_document2():
     return render_template('create_edit_document.html')
 
 
+# @app.route('/create-document3', methods=['GET', 'POST'])
+# def create_document3():
+#     if request.method == 'POST':
+#         doc_data = {
+#             'title': request.form.get('title'),
+#             'product': request.form.get('product'),
+#             'version': request.form.get('version'),
+#             'status': request.form.get('status'),
+#             'content': request.form.get('content'),
+#             'created_at': datetime.utcnow(),
+#             'updated_at': datetime.utcnow()
+#         }
+#         mongo.db.documents.insert_one(doc_data)
+#         return redirect(url_for('docs'))
+#     return render_template('create_doc_template3.html')
+
+
 @app.route('/create-document3', methods=['GET', 'POST'])
 def create_document3():
-    if request.method == 'POST':
-        doc_data = {
-            'title': request.form.get('title'),
-            'product': request.form.get('product'),
-            'version': request.form.get('version'),
-            'status': request.form.get('status'),
-            'content': request.form.get('content'),
-            'created_at': datetime.utcnow(),
-            'updated_at': datetime.utcnow()
-        }
-        mongo.db.documents.insert_one(doc_data)
-        return redirect(url_for('docs'))
-    return render_template('create_doc_template3.html')
+    doc = DocumentTemplate(
+        title="Project Report",
+        chapters=[
+            Chapter(
+                title="Chapter 1: Project Overview",
+                content="This chapter provides an overview of the project."
+            ),
+            Chapter(
+                title="Chapter 2: Project Activities",
+                content="This chapter details the main activities.",
+                sections=[
+                    Section(
+                        title="2.1: Software Installation",
+                        content="How the software was installed."
+                    ),
+                    Section(
+                        title="2.2: Software Tests",
+                        content="Testing approach and results."
+                    )
+                ]
+            ),
+            Chapter(
+                title="Chapter 3: Acceptance",
+                content="Acceptance procedures and criteria."
+            ),
+            Chapter(
+                title="Chapter 4: Final Payment",
+                content="Final financial arrangements."
+            )
+        ]
+    )
+
+    # Convert to plain dict for easier Jinja rendering
+    doc_dict = doc.to_dict()["children"]
+    return render_template("create_doc_template3.html", document=doc_dict)
+
 
 
 @app.route("/create-document4")
