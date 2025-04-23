@@ -7,6 +7,10 @@ from logging.handlers import RotatingFileHandler
 from datetime import datetime
 from database import DatabaseService
 
+# Models - editable document structure - models.py
+from model.models import Section, Chapter, DocumentTemplate
+
+
 app = Flask(__name__, static_folder='static')
 app.config["MONGO_URI"] = os.getenv("MONGO_URI", "mongodb://localhost:27017/smartscope")
 mongo = PyMongo(app)
@@ -369,8 +373,43 @@ def create_document3():
     return render_template('create_doc_template3.html')
 
 
+@app.route("/create-document4")
+def create_document4():
+    doc = DocumentTemplate(
+        title="Project Report",
+        chapters=[
+            Chapter(
+                title="Chapter 1: Project Overview",
+                content="This chapter provides an overview of the project."
+            ),
+            Chapter(
+                title="Chapter 2: Project Activities",
+                content="This chapter details the main activities.",
+                sections=[
+                    Section(
+                        title="2.1: Software Installation",
+                        content="How the software was installed."
+                    ),
+                    Section(
+                        title="2.2: Software Tests",
+                        content="Testing approach and results."
+                    )
+                ]
+            ),
+            Chapter(
+                title="Chapter 3: Acceptance",
+                content="Acceptance procedures and criteria."
+            ),
+            Chapter(
+                title="Chapter 4: Final Payment",
+                content="Final financial arrangements."
+            )
+        ]
+    )
 
-
+    # Convert to plain dict for easier Jinja rendering
+    doc_dict = doc.to_dict()["children"]
+    return render_template("document.html", document=doc_dict)
 
 
 @app.route('/edit-doc/<doc_id>', methods=['GET', 'POST'])
