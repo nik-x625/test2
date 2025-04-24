@@ -197,8 +197,40 @@ def cleanup_inactive_documents():
     except Exception as e:
         logger.error(f"Error during temporary document cleanup: {str(e)}")
 
+
 @app.route('/create-edit-doc', methods=['GET', 'POST'])
+
+
 def create_edit_doc():
+    """
+    Route handler for document creation and editing functionality.
+
+    This function manages both the creation of new documents and editing of existing ones:
+
+    For GET requests:
+    - Retrieves or generates a unique session ID for document editing
+    - Checks for an existing temporary document in the session
+    - If none exists, creates a new temporary document with sample structure
+    - Renders the document editing interface
+
+    For POST requests:
+    - Converts a temporary document into a permanent one
+    - Saves the document structure and metadata to the database
+    - Removes the temporary document
+    - Redirects to the document list
+
+    Parameters:
+        None (uses session and request data)
+
+    Returns:
+        GET: Rendered template for document editing interface
+        POST: Redirect to document list after saving
+
+    Session Data:
+        - Uses session_id cookie for document tracking
+        - Optionally uses user_id for document ownership
+    """
+
     # Get or create session ID
     session_id = request.cookies.get('session_id') or str(ObjectId())
     logger.info(f"Document session ID: {session_id}")
