@@ -1,10 +1,10 @@
-from flask import Flask, render_template, request, jsonify, redirect, url_for
+from flask import Flask, render_template, request, jsonify, redirect, url_for, make_response, session
 from flask_pymongo import PyMongo
 from bson import ObjectId
 import os
 import logging
 from logging.handlers import RotatingFileHandler
-from datetime import datetime
+from datetime import datetime, timedelta
 from database import DatabaseService
 
 # Models - editable document structure - models.py
@@ -46,153 +46,11 @@ def index():
     return render_template('index.html')
 
 
-@app.route('/chapter/<chapter_id>')
-def get_chapter(chapter_id):
-    logger.info(f'Fetching chapter with ID: {chapter_id}')
-    chapter = db_service.get_chapter(chapter_id)
-    if chapter:
-        logger.debug(f'Found chapter: {chapter.get("title")}')
-        return render_template('chapter.html', chapter=chapter)
-    logger.warning(f'Chapter not found with ID: {chapter_id}')
-    return '', 404
 
-@app.route('/api/chapters', methods=['GET'])
-def get_chapters():
-    logger.debug('Fetching all chapters')
-    chapters = db_service.get_chapters()
-    return render_template('chapters_list.html', chapters=chapters)
 
-@app.route('/api/chapters', methods=['POST'])
-def add_chapter():
-    try:
-        title = request.form.get('title')
-        if not title:
-            logger.warning('Attempted to add chapter with empty title')
-            return '', 400
-        
-        logger.info(f'Adding new chapter: {title}')
-        chapter = db_service.create_chapter(title)
-        logger.debug(f'Successfully added chapter with ID: {chapter["_id"]}')
-        return render_template('chapter_item.html', chapter=chapter)
-    except Exception as e:
-        logger.error(f'Error adding chapter: {str(e)}', exc_info=True)
-        return '', 400
 
-@app.route('/api/chapters/reorder', methods=['POST'])
-def reorder_chapters():
-    try:
-        chapter_ids = request.form.getlist('chapter_id')
-        if not chapter_ids:
-            logger.warning('Attempted to reorder chapters with no IDs provided')
-            return '', 400
-            
-        logger.info(f'Reordering {len(chapter_ids)} chapters')
-        chapters = db_service.update_chapter_order(chapter_ids)
-        logger.info('Successfully reordered chapters')
-        return render_template('chapters_list.html', chapters=chapters)
-    except Exception as e:
-        logger.error(f'Error in reorder_chapters: {str(e)}', exc_info=True)
-        return '', 500
 
-@app.route('/api/chapters/<chapter_id>', methods=['DELETE'])
-def delete_chapter(chapter_id):
-    logger.info(f'Attempting to delete chapter: {chapter_id}')
-    result = db_service.delete_chapter(chapter_id)
-    if result.deleted_count:
-        logger.info(f'Successfully deleted chapter: {chapter_id}')
-    else:
-        logger.warning(f'Chapter not found for deletion: {chapter_id}')
-    return '', 204
-
-@app.route('/api/chapters/<chapter_id>/paragraphs', methods=['POST'])
-def add_paragraph(chapter_id):
-    try:
-        data = request.get_json()
-        if not data or 'content' not in data:
-            logger.warning(f'Attempted to add paragraph to chapter {chapter_id} with invalid data')
-            return jsonify({'error': 'Content is required'}), 400
-            
-        logger.info(f'Adding paragraph to chapter: {chapter_id}')
-        result = db_service.add_paragraph(chapter_id, data['content'])
-        logger.debug(f'Successfully added paragraph to chapter: {chapter_id}')
-        return jsonify({'success': True})
-    except Exception as e:
-        logger.error(f'Error adding paragraph to chapter {chapter_id}: {str(e)}', exc_info=True)
-        return jsonify({'error': str(e)}), 400
-
-@app.route('/api/chapters/<chapter_id>/paragraphs/<paragraph_index>', methods=['PUT'])
-def update_paragraph(chapter_id, paragraph_index):
-    try:
-        data = request.get_json()
-        if not data or 'content' not in data:
-            logger.warning(f'Attempted to update paragraph {paragraph_index} in chapter {chapter_id} with invalid data')
-            return jsonify({'error': 'Content is required'}), 400
-            
-        logger.info(f'Updating paragraph {paragraph_index} in chapter: {chapter_id}')
-        result = db_service.update_paragraph(chapter_id, paragraph_index, data['content'])
-        logger.debug(f'Successfully updated paragraph {paragraph_index} in chapter: {chapter_id}')
-        return jsonify({'success': True})
-    except Exception as e:
-        logger.error(f'Error updating paragraph {paragraph_index} in chapter {chapter_id}: {str(e)}', exc_info=True)
-        return jsonify({'error': str(e)}), 400
-
-@app.route('/api/chapters/<chapter_id>/paragraphs/<paragraph_index>', methods=['DELETE'])
-def delete_paragraph(chapter_id, paragraph_index):
-    try:
-        logger.info(f'Attempting to delete paragraph {paragraph_index} from chapter: {chapter_id}')
-        result = db_service.delete_paragraph(chapter_id, paragraph_index)
-        logger.debug(f'Successfully deleted paragraph {paragraph_index} from chapter: {chapter_id}')
-        return '', 204
-    except Exception as e:
-        logger.error(f'Error deleting paragraph {paragraph_index} from chapter {chapter_id}: {str(e)}', exc_info=True)
-        return jsonify({'error': str(e)}), 400
-
-@app.route('/api/chapters/<chapter_id>/edit', methods=['GET'])
-def edit_chapter(chapter_id):
-    try:
-        logger.info(f'Fetching chapter for edit: {chapter_id}')
-        chapter = db_service.get_chapter(chapter_id)
-        if chapter:
-            return render_template('chapter_edit.html', chapter=chapter)
-        logger.warning(f'Chapter not found for edit: {chapter_id}')
-        return '', 404
-    except Exception as e:
-        logger.error(f'Error fetching chapter for edit: {str(e)}', exc_info=True)
-        return '', 500
-
-@app.route('/api/chapters/<chapter_id>/cancel', methods=['GET'])
-def cancel_edit(chapter_id):
-    try:
-        logger.info(f'Canceling edit for chapter: {chapter_id}')
-        chapter = db_service.get_chapter(chapter_id)
-        if chapter:
-            return render_template('chapter_item.html', chapter=chapter)
-        logger.warning(f'Chapter not found for cancel: {chapter_id}')
-        return '', 404
-    except Exception as e:
-        logger.error(f'Error canceling chapter edit: {str(e)}', exc_info=True)
-        return '', 500
-
-@app.route('/api/chapters/<chapter_id>', methods=['PUT'])
-def update_chapter(chapter_id):
-    try:
-        title = request.form.get('title')
-        if not title:
-            logger.warning(f'Attempted to update chapter {chapter_id} with empty title')
-            return '', 400
-            
-        logger.info(f'Updating chapter {chapter_id} with title: {title}')
-        if db_service.update_chapter(chapter_id, title):
-            chapter = db_service.get_chapter(chapter_id)
-            logger.debug(f'Successfully updated chapter {chapter_id}')
-            return render_template('chapter_item.html', chapter=chapter)
-        else:
-            logger.warning(f'No changes made to chapter {chapter_id}')
-            return '', 400
-    except Exception as e:
-        logger.error(f'Error updating chapter {chapter_id}: {str(e)}', exc_info=True)
-        return '', 500
-
+# templates start
 @app.route('/templates')
 def templates():
     logger.info('Accessing templates page')
@@ -235,38 +93,6 @@ def edit_template(template_id):
         logger.error(f'Error fetching template for edit: {str(e)}', exc_info=True)
         return '', 500
 
-@app.route('/update-template/<template_id>', methods=['PUT'])
-def update_template(template_id):
-    try:
-        # Get form data
-        template_data = {
-            'title': request.form.get('title'),
-            'product': request.form.get('product'),
-            'version': request.form.get('version'),
-            'status': request.form.get('status'),
-            'introduction': request.form.get('introduction'),
-            'project_overview': request.form.get('project_overview'),
-            'scope': request.form.get('scope')
-        }
-        
-        # Update in MongoDB
-        result = mongo.db.templates.update_one(
-            {'_id': ObjectId(template_id)},
-            {'$set': template_data}
-        )
-        
-        if result.modified_count:
-            # Successfully updated
-            templates = list(mongo.db.templates.find())
-            return render_template('templates.html', templates=templates, message="Template updated successfully!")
-        else:
-            # Failed to update
-            return render_template('templates.html', templates=list(mongo.db.templates.find()), error="Failed to update template. Please try again.")
-            
-    except Exception as e:
-        logger.error(f"Error updating template: {str(e)}")
-        return render_template('templates.html', templates=list(mongo.db.templates.find()), error="An error occurred. Please try again.")
-
 @app.route('/template-form')
 def template_form():
     return render_template('template_form.html')
@@ -299,15 +125,12 @@ def create_template():
     except Exception as e:
         logger.error(f"Error creating template: {str(e)}")
         return render_template('templates.html', templates=list(mongo.db.templates.find()), error="An error occurred. Please try again.")
+# templates end
 
 
 
-@app.route('/wizard/step2/<template_id>')
-def wizard_step2(template_id):
-    template = mongo.db.templates.find_one({'_id': ObjectId(template_id)})
-    if not template:
-        return "Template not found", 404
-    return render_template('wizard_step2.html', template=template)
+
+
 
 @app.route('/dashboard')
 def dashboard():
@@ -334,218 +157,331 @@ def docs():
 
 
 
-@app.route('/create-document1')
-def create_document1():
-    #templates = list(mongo.db.templates.find())
-    return render_template('wizard.html')#, templates=templates)
-
-@app.route('/create-document2', methods=['GET', 'POST'])
-def create_document2():
-    if request.method == 'POST':
-        doc_data = {
-            'title': request.form.get('title'),
-            'product': request.form.get('product'),
-            'version': request.form.get('version'),
-            'status': request.form.get('status'),
-            'content': request.form.get('content'),
-            'created_at': datetime.utcnow(),
-            'updated_at': datetime.utcnow()
-        }
-        mongo.db.documents.insert_one(doc_data)
-        return redirect(url_for('docs'))
-    return render_template('create_edit_document.html')
 
 
-# @app.route('/create-document3', methods=['GET', 'POST'])
-# def create_document3():
-#     if request.method == 'POST':
-#         doc_data = {
-#             'title': request.form.get('title'),
-#             'product': request.form.get('product'),
-#             'version': request.form.get('version'),
-#             'status': request.form.get('status'),
-#             'content': request.form.get('content'),
-#             'created_at': datetime.utcnow(),
-#             'updated_at': datetime.utcnow()
-#         }
-#         mongo.db.documents.insert_one(doc_data)
-#         return redirect(url_for('docs'))
-#     return render_template('create_doc_template3.html')
+# Helper function to find and update a nested document item by ID
+def update_document_item(structure, item_id, content=None, title=None):
+    """Recursively search and update an item in the document structure"""
+    for item in structure:
+        if str(item.get('id')) == str(item_id):
+            if content is not None:
+                item['content'] = content
+            if title is not None:
+                item['title'] = title
+            return True
+        
+        # If this item has children, search there too
+        if 'children' in item and item['children']:
+            if update_document_item(item['children'], item_id, content, title):
+                return True
+    
+    return False
 
+# Function to schedule cleanup of inactive temporary documents
+def cleanup_inactive_documents():
+    """Remove temporary documents that have been inactive for more than 24 hours"""
+    cutoff_time = datetime.utcnow() - timedelta(hours=24)
+    
+    try:
+        inactive_docs = mongo.db.temp_documents.find({
+            'last_activity': {'$lt': cutoff_time}
+        })
+        
+        count = 0
+        for doc in inactive_docs:
+            mongo.db.temp_documents.delete_one({'_id': doc['_id']})
+            count += 1
+        
+        if count > 0:
+            logger.info(f"Cleaned up {count} inactive temporary documents")
+    except Exception as e:
+        logger.error(f"Error during temporary document cleanup: {str(e)}")
 
 @app.route('/create-document3', methods=['GET', 'POST'])
 def create_document3():
-    doc = DocumentTemplate(
-        title="Project Report",
-        chapters=[
-            Chapter(
-                title="Chapter 1: Project Overview",
-                content="This chapter provides an overview of the project."
-            ),
-            Chapter(
-                title="Chapter 2: Project Activities",
-                content="This chapter details the main activities.",
-                sections=[
-                    Section(
-                        title="2.1: Software Installation",
-                        content="How the software was installed."
-                    ),
-                    Section(
-                        title="2.2: Software Tests",
-                        content="Testing approach and results."
-                    )
-                ]
-            ),
-            Chapter(
-                title="Chapter 3: Acceptance",
-                content="Acceptance procedures and criteria."
-            ),
-            Chapter(
-                title="Chapter 4: Final Payment",
-                content="Final financial arrangements."
-            )
-        ]
-    )
-
-    # Convert to plain dict for easier Jinja rendering
-    doc_dict = doc.to_dict()["children"]
-    return render_template("create_doc_template3.html", document=doc_dict)
-
-
-
-@app.route("/create-document4")
-def create_document4():
-    doc = DocumentTemplate(
-        title="Project Report",
-        chapters=[
-            Chapter(
-                title="Chapter 1: Project Overview",
-                content="This chapter provides an overview of the project."
-            ),
-            Chapter(
-                title="Chapter 2: Project Activities",
-                content="This chapter details the main activities.",
-                sections=[
-                    Section(
-                        title="2.1: Software Installation",
-                        content="How the software was installed."
-                    ),
-                    Section(
-                        title="2.2: Software Tests",
-                        content="Testing approach and results."
-                    )
-                ]
-            ),
-            Chapter(
-                title="Chapter 3: Acceptance",
-                content="Acceptance procedures and criteria."
-            ),
-            Chapter(
-                title="Chapter 4: Final Payment",
-                content="Final financial arrangements."
-            )
-        ]
-    )
-
-    # Convert to plain dict for easier Jinja rendering
-    doc_dict = doc.to_dict()["children"]
-    return render_template("document.html", document=doc_dict)
-
-
-@app.route('/edit-doc/<doc_id>', methods=['GET', 'POST'])
-def edit_doc(doc_id):
-    if request.method == 'POST':
-        doc_data = {
-            'title': request.form.get('title'),
-            'product': request.form.get('product'),
-            'version': request.form.get('version'),
-            'status': request.form.get('status'),
-            'content': request.form.get('content'),
-            'updated_at': datetime.utcnow()
-        }
-        mongo.db.documents.update_one({'_id': ObjectId(doc_id)}, {'$set': doc_data})
-        return redirect(url_for('docs'))
+    # Get or create session ID
+    session_id = request.cookies.get('session_id') or str(ObjectId())
+    logger.info(f"Document session ID: {session_id}")
     
-    doc = mongo.db.documents.find_one({'_id': ObjectId(doc_id)})
-    if not doc:
-        return "Document not found", 404
-    return render_template('create_edit_document.html', doc=doc)
+    if request.method == 'POST':
+        # When "Save" is clicked - convert temp document to permanent
+        temp_doc = mongo.db.temp_documents.find_one({'session_id': session_id})
+        
+        if temp_doc:
+            # Create permanent document from temp
+            permanent_doc = {
+                'title': temp_doc.get('title', 'Untitled Document'),
+                'structure': temp_doc.get('structure', []),
+                'created_at': datetime.utcnow(),
+                'updated_at': datetime.utcnow(),
+                'user_id': session.get('user_id', None)  # If user authentication is used
+            }
+            
+            # Insert as permanent document
+            result = mongo.db.documents.insert_one(permanent_doc)
+            logger.info(f"Created permanent document from temporary: {result.inserted_id}")
+            
+            # Delete the temporary document
+            mongo.db.temp_documents.delete_one({'session_id': session_id})
+            
+            # Redirect to the document list or view
+            return redirect(url_for('docs'))
+        else:
+            logger.warning(f"No temporary document found for session {session_id}")
+    
+    # For GET request
+    # Check if there's an existing temporary document for this session
+    temp_doc = mongo.db.temp_documents.find_one({'session_id': session_id})
+    
+    if not temp_doc:
+        # Create a new temporary document with sample structure
+        doc = DocumentTemplate(
+            title="Project Report",
+            chapters=[
+                Chapter(
+                    title="Chapter 1: Project Overview",
+                    content="This chapter provides an overview of the project."
+                ),
+                Chapter(
+                    title="Chapter 2: Project Activities",
+                    content="This chapter details the main activities.",
+                    sections=[
+                        Section(
+                            title="2.1: Software Installation",
+                            content="How the software was installed.xxyy2"
+                        ),
+                        Section(
+                            title="2.2: Software Tests",
+                            content="Testing approach and results."
+                        )
+                    ]
+                ),
+                Chapter(
+                    title="Chapter 3: Acceptance",
+                    content="Acceptance procedures and criteria."
+                ),
+                Chapter(
+                    title="Chapter 4: Final Payment",
+                    content="Final financial arrangements."
+                )
+            ]
+        )
+        
+        # Convert to dict
+        doc_dict = doc.to_dict()
+        
+        # Process the structure to ensure each item has an ID
+        def ensure_ids(items):
+            processed = []
+            for item in items:
+                if 'id' not in item:
+                    item['id'] = str(ObjectId())
+                if 'children' in item and item['children']:
+                    item['children'] = ensure_ids(item['children'])
+                processed.append(item)
+            return processed
+        
+        structure = ensure_ids(doc_dict['children'])
+        
+        # Store in temp collection
+        temp_doc = {
+            'session_id': session_id,
+            'title': doc_dict['title'],
+            'structure': structure,
+            'created_at': datetime.utcnow(),
+            'updated_at': datetime.utcnow(),
+            'last_activity': datetime.utcnow()
+        }
+        
+        mongo.db.temp_documents.insert_one(temp_doc)
+        logger.info(f"Created new temporary document for session {session_id}")
+    else:
+        # Update the last activity timestamp
+        mongo.db.temp_documents.update_one(
+            {'session_id': session_id},
+            {'$set': {'last_activity': datetime.utcnow()}}
+        )
+        logger.info(f"Using existing temporary document for session {session_id}")
+    
+    # Set a cookie to identify this session
+    response = make_response(render_template(
+        'create_doc_template3.html', 
+        document=temp_doc.get('structure', []),
+        session_id=session_id
+    ))
+    response.set_cookie('session_id', session_id, max_age=60*60*24)  # 24 hour cookie
+    return response
 
+@app.route('/auto_save_document', methods=['POST'])
+def auto_save_document():
+    """Auto-save document content as user types"""
+    session_id = request.cookies.get('session_id')
+    if not session_id:
+        logger.warning("Auto-save attempted without session ID")
+        return jsonify({'status': 'error', 'message': 'No session found'}), 400
+    
+    try:
+        data = request.json
+        item_id = data.get('item_id')
+        content = data.get('content')
+        title = data.get('title')
+        
+        logger.debug(f"Auto-save for item {item_id} in session {session_id}")
+        
+        # Find the document
+        temp_doc = mongo.db.temp_documents.find_one({'session_id': session_id})
+        if not temp_doc:
+            logger.warning(f"Auto-save: Document not found for session {session_id}")
+            return jsonify({'status': 'error', 'message': 'Document not found'}), 404
+        
+        # Update the specific item in the structure
+        updated = update_document_item(temp_doc['structure'], item_id, content, title)
+        
+        if updated:
+            # Update the document in the database
+            mongo.db.temp_documents.update_one(
+                {'session_id': session_id},
+                {
+                    '$set': {
+                        'structure': temp_doc['structure'],
+                        'updated_at': datetime.utcnow(),
+                        'last_activity': datetime.utcnow()
+                    }
+                }
+            )
+            logger.debug(f"Document auto-saved successfully for item {item_id}")
+            return jsonify({
+                'status': 'success', 
+                'message': 'Document auto-saved',
+                'timestamp': datetime.utcnow().strftime('%H:%M:%S')
+            })
+        
+        logger.warning(f"Auto-save: Item {item_id} not found in document structure")
+        return jsonify({'status': 'error', 'message': 'Item not found in document'}), 404
+        
+    except Exception as e:
+        logger.error(f"Error during auto-save: {str(e)}", exc_info=True)
+        return jsonify({'status': 'error', 'message': str(e)}), 500
 
+@app.route('/get_document/<item_id>', methods=['GET'])
+def get_document_item(item_id):
+    """Get specific document item content for editing"""
+    session_id = request.cookies.get('session_id')
+    if not session_id:
+        return "<p>Session expired. Please refresh the page.</p>", 400
+    
+    try:
+        # Find the document
+        temp_doc = mongo.db.temp_documents.find_one({'session_id': session_id})
+        if not temp_doc:
+            return "<p>Document not found. Please refresh the page.</p>", 404
+        
+        # Find the specific item (helper function)
+        def find_item(items, target_id):
+            for item in items:
+                if str(item.get('id')) == str(target_id):
+                    return item
+                if 'children' in item and item['children']:
+                    found = find_item(item['children'], target_id)
+                    if found:
+                        return found
+            return None
+        
+        item = find_item(temp_doc['structure'], item_id)
+        
+        if item:
+            # Render the editor with this item's content
+            return render_template('partials/document_editor.html', 
+                                  item=item,
+                                  session_id=session_id)
+        
+        return "<p>Document section not found.</p>", 404
+        
+    except Exception as e:
+        logger.error(f"Error getting document item: {str(e)}", exc_info=True)
+        return f"<p>Error loading content: {str(e)}</p>", 500
 
+@app.route('/add_document_item', methods=['POST'])
+def add_document_item():
+    """Add a new chapter or section to the document"""
+    session_id = request.cookies.get('session_id')
+    if not session_id:
+        return jsonify({'status': 'error', 'message': 'No session found'}), 400
+    
+    try:
+        parent_id = request.form.get('parent_id', None)  # None for root level
+        title = request.form.get('title', 'New Section')
+        
+        # Find the document
+        temp_doc = mongo.db.temp_documents.find_one({'session_id': session_id})
+        if not temp_doc:
+            return jsonify({'status': 'error', 'message': 'Document not found'}), 404
+        
+        # Create new item
+        new_item = {
+            'id': str(ObjectId()),
+            'title': title,
+            'content': '',
+            'children': []
+        }
+        
+        # If parent_id is None, add to root level
+        if not parent_id:
+            temp_doc['structure'].append(new_item)
+            logger.info(f"Added new root-level item {new_item['id']}")
+        else:
+            # Find the parent and add to its children
+            def add_to_parent(items, parent_id, new_item):
+                for item in items:
+                    if str(item.get('id')) == str(parent_id):
+                        if 'children' not in item:
+                            item['children'] = []
+                        item['children'].append(new_item)
+                        return True
+                    if 'children' in item and item['children']:
+                        if add_to_parent(item['children'], parent_id, new_item):
+                            return True
+                return False
+            
+            if not add_to_parent(temp_doc['structure'], parent_id, new_item):
+                return jsonify({'status': 'error', 'message': 'Parent item not found'}), 404
+            
+            logger.info(f"Added new item {new_item['id']} under parent {parent_id}")
+        
+        # Update the document
+        mongo.db.temp_documents.update_one(
+            {'session_id': session_id},
+            {
+                '$set': {
+                    'structure': temp_doc['structure'],
+                    'updated_at': datetime.utcnow(),
+                    'last_activity': datetime.utcnow()
+                }
+            }
+        )
+        
+        # Return the HTML for the new item
+        return render_template('partials/document_item.html', 
+                              item=new_item,
+                              is_new=True)
+        
+    except Exception as e:
+        logger.error(f"Error adding document item: {str(e)}", exc_info=True)
+        return jsonify({'status': 'error', 'message': str(e)}), 500
 
+# Schedule the cleanup task to run daily if using a task scheduler
+# For example, if using APScheduler:
+# 
+# from apscheduler.schedulers.background import BackgroundScheduler
+# scheduler = BackgroundScheduler()
+# scheduler.add_job(cleanup_inactive_documents, 'interval', hours=24)
+# scheduler.start()
 
 @app.route('/delete-doc/<doc_id>', methods=['DELETE'])
 def delete_doc(doc_id):
     mongo.db.documents.delete_one({'_id': ObjectId(doc_id)})
     documents = list(mongo.db.documents.find())
     return render_template('docs_list.html', documents=documents)
-
-@app.route('/auto-save', methods=['POST'])
-def auto_save():
-    logger.info('Auto-saving document')
-    try:
-        data = request.form.to_dict()
-        
-        # If this is a new document (no _id), create a draft
-        if '_id' not in data:
-            # Generate a temporary ID for the draft
-            temp_id = str(ObjectId())
-            data['_id'] = temp_id
-            data['status'] = 'draft'
-            data['created_at'] = datetime.utcnow()
-            data['updated_at'] = datetime.utcnow()
-            
-            # Insert or update the draft
-            mongo.db.documents.update_one(
-                {'_id': temp_id},
-                {'$set': data},
-                upsert=True
-            )
-        else:
-            # Update existing document
-            doc_id = data.pop('_id')
-            data['updated_at'] = datetime.utcnow()
-            
-            mongo.db.documents.update_one(
-                {'_id': ObjectId(doc_id)},
-                {'$set': data}
-            )
-        
-        return '', 204  # No content response
-        
-    except Exception as e:
-        logger.error(f"Auto-save error: {str(e)}")
-        return '', 500
-
-@app.route('/add-chapter', methods=['GET'])
-def add_chapter_new():
-    try:
-        # Get the current chapter count from the request
-        chapter_count = int(request.args.get('count', 0))
-        chapter_index = chapter_count + 1
-        
-        # Get the current document ID if it exists
-        doc_id = request.args.get('doc_id')
-        
-        # Create a new chapter in the document if doc_id exists
-        if doc_id:
-            mongo.db.documents.update_one(
-                {'_id': ObjectId(doc_id)},
-                {'$push': {'chapters': {
-                    'title': f'Chapter {chapter_index}',
-                    'content': '',
-                    'subchapters': []
-                }}}
-            )
-        
-        return render_template('chapter_section.html', 
-                            chapter_index=chapter_index,
-                            chapter_number=chapter_index,
-                            chapter_title=f'Chapter {chapter_index}')
-    except Exception as e:
-        logger.error(f"Error adding chapter: {str(e)}")
-        return '', 500
 
 @app.route('/add-subchapter/<chapter_index>', methods=['GET'])
 def add_subchapter(chapter_index):
@@ -575,50 +511,6 @@ def add_subchapter(chapter_index):
                             subchapter_title=f'Subchapter {subchapter_index}')
     except Exception as e:
         logger.error(f"Error adding subchapter: {str(e)}")
-        return '', 500
-
-@app.route('/remove-chapter/<chapter_index>', methods=['DELETE'])
-def remove_chapter(chapter_index):
-    try:
-        # Get the current document ID if it exists
-        doc_id = request.args.get('doc_id')
-        
-        # Remove chapter from the document if doc_id exists
-        if doc_id:
-            mongo.db.documents.update_one(
-                {'_id': ObjectId(doc_id)},
-                {'$unset': {f'chapters.{int(chapter_index)-1}': 1}}
-            )
-            mongo.db.documents.update_one(
-                {'_id': ObjectId(doc_id)},
-                {'$pull': {'chapters': None}}
-            )
-        
-        return '', 204
-    except Exception as e:
-        logger.error(f"Error removing chapter: {str(e)}")
-        return '', 500
-
-@app.route('/remove-subchapter/<chapter_index>/<subchapter_index>', methods=['DELETE'])
-def remove_subchapter(chapter_index, subchapter_index):
-    try:
-        # Get the current document ID if it exists
-        doc_id = request.args.get('doc_id')
-        
-        # Remove subchapter from the document if doc_id exists
-        if doc_id:
-            mongo.db.documents.update_one(
-                {'_id': ObjectId(doc_id)},
-                {'$unset': {f'chapters.{int(chapter_index)-1}.subchapters.{int(subchapter_index)-1}': 1}}
-            )
-            mongo.db.documents.update_one(
-                {'_id': ObjectId(doc_id)},
-                {'$pull': {f'chapters.{int(chapter_index)-1}.subchapters': None}}
-            )
-        
-        return '', 204
-    except Exception as e:
-        logger.error(f"Error removing subchapter: {str(e)}")
         return '', 500
 
 if __name__ == '__main__':

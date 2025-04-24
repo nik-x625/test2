@@ -345,33 +345,15 @@
               </a>
             </li>
 
-            <li class="sidebar-menu-item">
-              <a href="#" class="sidebar-menu-button" hx-get="/create-document1" hx-target="#mainContent">
-                <i class="bi bi-magic"></i>
-                <span>Create Document 1</span>
-              </a>
-            </li>
-
-            <li class="sidebar-menu-item">
-              <a href="#" class="sidebar-menu-button" hx-get="/create-document2" hx-target="#mainContent">
-                <i class="bi bi-magic"></i>
-                <span>Create Document 2</span>
-              </a>
-            </li>
 
             <li class="sidebar-menu-item">
               <a href="#" class="sidebar-menu-button" hx-get="/create-document3" hx-target="#mainContent">
                 <i class="bi bi-magic"></i>
-                <span>Create Document 3</span>
+                <span>Create Document</span>
               </a>
             </li>            
 
-            <li class="sidebar-menu-item">
-              <a href="#" class="sidebar-menu-button" hx-get="/create-document4" hx-target="#mainContent">
-                <i class="bi bi-magic"></i>
-                <span>Create Document 4</span>
-              </a>
-            </li>               
+           
 
             <li class="sidebar-menu-item">
               <a href="#" class="sidebar-menu-button" hx-get="/users" hx-target="#mainContent">
@@ -398,163 +380,9 @@
                 data-bs-target="#documentationCollapse" aria-expanded="false" aria-controls="documentationCollapse">
                 <i class="bi bi-book"></i>
                 <span>Documentation</span>
-                <i class="bi bi-chevron-down ms-auto chevron-toggle chevron-down"></i>
+                
               </button>
-              <div class="collapse" id="documentationCollapse">
-                <ul class="sidebar-menu-sub">
-                  <!-- Chapter 1 -->
-                  <li class="chapter-item">
-                    <button class="sidebar-menu-button" data-bs-toggle="collapse" data-bs-target="#chapter1Collapse"
-                      aria-expanded="false" aria-controls="chapter1Collapse">
-                      <span>Chapter 1: Introduction</span>
-                      <i class="bi bi-chevron-right ms-auto chevron-toggle chevron-right"></i>
-                    </button>
-                    <div class="collapse" id="chapter1Collapse">
-                      <div class="nested-level">
-                        <!-- Section 1.1 -->
-                        <button class="sidebar-menu-button" data-bs-toggle="collapse"
-                          data-bs-target="#section11Collapse" aria-expanded="false" aria-controls="section11Collapse">
-                          <span>1.1 Overview</span>
-                          <i class="bi bi-chevron-right ms-auto chevron-toggle chevron-right"></i>
-                        </button>
-                        <div class="collapse" id="section11Collapse">
-                          <div class="nested-level">
-                            <a href="#" class="sidebar-menu-button">
-                              <i class="bi bi-file-text"></i>
-                              <span>1.1.1 Purpose</span>
-                            </a>
-                            <a href="#" class="sidebar-menu-button">
-                              <i class="bi bi-file-text"></i>
-                              <span>1.1.2 Scope</span>
-                            </a>
-                            <!-- Section 1.1.3 -->
-                            <button class="sidebar-menu-button" data-bs-toggle="collapse"
-                              data-bs-target="#section113Collapse" aria-expanded="false"
-                              aria-controls="section113Collapse">
-                              <span>1.1.3 Definitions</span>
-                              <i class="bi bi-chevron-right ms-auto chevron-toggle chevron-right"></i>
-                            </button>
-                            <div class="collapse" id="section113Collapse">
-                              <div class="nested-level">
-                                <a href="#" class="sidebar-menu-button">
-                                  <i class="bi bi-file-text"></i>
-                                  <span>1.1.3.1 Terms</span>
-                                </a>
-                                <!-- Section 1.1.3.2 -->
-                                <button class="sidebar-menu-button" data-bs-toggle="collapse"
-                                  data-bs-target="#section1132Collapse" aria-expanded="false"
-                                  aria-controls="section1132Collapse">
-                                  <span>1.1.3.2 Acronyms</span>
-                                  <i class="bi bi-chevron-right ms-auto chevron-toggle chevron-right"></i>
-                                </button>
-                                <div class="collapse" id="section1132Collapse">
-                                  <div class="nested-level">
-                                    <a href="#" class="sidebar-menu-button">
-                                      <i class="bi bi-file-text"></i>
-                                      <span>1.1.3.2.1 Common Acronyms</span>
-                                    </a>
-                                    <!-- Section 1.1.3.2.2 -->
-                                    <button class="sidebar-menu-button" data-bs-toggle="collapse"
-                                      data-bs-target="#section11322Collapse" aria-expanded="false"
-                                      aria-controls="section11322Collapse">
-                                      <span>1.1.3.2.2 Industry Specific</span>
-                                      <i class="bi bi-chevron-right ms-auto chevron-toggle chevron-right"></i>
-                                    </button>
-                                    <div class="collapse" id="section11322Collapse">
-                                      <div class="nested-level">
-                                        <a href="#" class="sidebar-menu-button">
-                                          <i class="bi bi-file-text"></i>
-                                          <span>1.1.3.2.2.1 Technical</span>
-                                        </a>
-                                        <a href="#" class="sidebar-menu-button">
-                                          <i class="bi bi-file-text"></i>
-                                          <span>1.1.3.2.2.2 Business</span>
-                                        </a>
-                                      </div>
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                        <a href="#" class="sidebar-menu-button">
-                          <i class="bi bi-file-text"></i>
-                          <span>1.2 System Description</span>
-                        </a>
-                        <a href="#" class="sidebar-menu-button">
-                          <i class="bi bi-file-text"></i>
-                          <span>1.3 Document Conventions</span>
-                        </a>
-                      </div>
-                    </div>
-                  </li>
 
-                  <!-- Chapter 2 -->
-                  <li class="chapter-item">
-                    <button class="sidebar-menu-button" data-bs-toggle="collapse" data-bs-target="#chapter2Collapse"
-                      aria-expanded="false" aria-controls="chapter2Collapse">
-                      <span>Chapter 2: Getting Started</span>
-                      <i class="bi bi-chevron-right ms-auto chevron-toggle chevron-right"></i>
-                    </button>
-                    <div class="collapse" id="chapter2Collapse">
-                      <div class="nested-level">
-                        <a href="#" class="sidebar-menu-button">
-                          <i class="bi bi-file-text"></i>
-                          <span>2.1 Installation</span>
-                        </a>
-                        <a href="#" class="sidebar-menu-button">
-                          <i class="bi bi-file-text"></i>
-                          <span>2.2 Configuration</span>
-                        </a>
-                        <!-- Section 2.3 -->
-                        <button class="sidebar-menu-button" data-bs-toggle="collapse"
-                          data-bs-target="#section23Collapse" aria-expanded="false" aria-controls="section23Collapse">
-                          <span>2.3 First Steps</span>
-                          <i class="bi bi-chevron-right ms-auto chevron-toggle chevron-right"></i>
-                        </button>
-                        <div class="collapse" id="section23Collapse">
-                          <div class="nested-level">
-                            <a href="#" class="sidebar-menu-button">
-                              <i class="bi bi-file-text"></i>
-                              <span>2.3.1 Creating a Project</span>
-                            </a>
-                            <a href="#" class="sidebar-menu-button">
-                              <i class="bi bi-file-text"></i>
-                              <span>2.3.2 Basic Operations</span>
-                            </a>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </li>
-
-                  <!-- Chapter 3 -->
-                  <li class="chapter-item">
-                    <button class="sidebar-menu-button" data-bs-toggle="collapse" data-bs-target="#chapter3Collapse"
-                      aria-expanded="false" aria-controls="chapter3Collapse">
-                      <span>Chapter 3: Advanced Topics</span>
-                      <i class="bi bi-chevron-right ms-auto chevron-toggle chevron-right"></i>
-                    </button>
-                    <div class="collapse" id="chapter3Collapse">
-                      <div class="nested-level">
-                        <a href="#" class="sidebar-menu-button">
-                          <i class="bi bi-file-text"></i>
-                          <span>3.1 Architecture</span>
-                        </a>
-                        <a href="#" class="sidebar-menu-button">
-                          <i class="bi bi-file-text"></i>
-                          <span>3.2 Performance</span>
-                        </a>
-                        <a href="#" class="sidebar-menu-button">
-                          <i class="bi bi-file-text"></i>
-                          <span>3.3 Security</span>
-                        </a>
-                      </div>
-                    </div>
-                  </li>
-                </ul>
-              </div>
             </li>
           </ul>
         </div>
