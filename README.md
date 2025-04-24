@@ -60,15 +60,15 @@ graph LR
     A --> C[Introduction]
     A --> D[Project Overview]
     A --> E[Scope]
-    A --> F[Chapters]
+    A --> F[Structure Items]
     
-    F --> G[Chapter 1]
-    F --> H[Chapter 2]
-    F --> I[Chapter N]
+    F --> G[Item 1]
+    F --> H[Item 2]
+    F --> I[Item N]
     
-    G --> J[Subchapters]
-    H --> K[Subchapters]
-    I --> L[Subchapters]
+    G --> J[Nested Items]
+    H --> K[Nested Items]
+    I --> L[Nested Items]
 ```
 
 ## Workflows
@@ -82,16 +82,16 @@ sequenceDiagram
     participant Backend
     participant DB
 
-    User->>UI: Click "New Document"
-    UI->>Backend: POST /create-document
-    Backend->>DB: Create Draft Document
+    User->>UI: Click "Create Document"
+    UI->>Backend: GET /create-document3
+    Backend->>DB: Create Temporary Document
     DB-->>Backend: Document Created
     Backend-->>UI: Load Document Editor
     UI->>User: Show Document Tree
     
     loop Content Editing
         User->>UI: Edit Content
-        UI->>Backend: Auto-save Content
+        UI->>Backend: Auto-save Content via /auto_save_document
         Backend->>DB: Update Document
     end
 ```
@@ -114,9 +114,9 @@ stateDiagram-v2
 ```mermaid
 graph LR
     A[User Input] --> B{Debounce Timer}
-    B -->|500ms| C[HTMX Request]
-    C --> D[Backend]
-    D --> E[MongoDB]
+    B -->|500ms| C[Fetch Request]
+    C --> D[/auto_save_document]
+    D --> E[MongoDB temp_documents]
     E --> F[Success Response]
     F --> G[Update Status]
 ```
@@ -128,16 +128,16 @@ graph TD
     A[Document Tree] --> B[Introduction]
     A --> C[Project Overview]
     A --> D[Scope]
-    A --> E[Chapters]
+    A --> E[Dynamic Items]
     
-    E --> F[Chapter 1]
-    E --> G[Chapter 2]
+    E --> F[Item 1]
+    E --> G[Item 2]
     
-    F --> H[Subchapter 1.1]
-    F --> I[Subchapter 1.2]
+    F --> H[Nested Item 1.1]
+    F --> I[Nested Item 1.2]
     
-    G --> J[Subchapter 2.1]
-    G --> K[Subchapter 2.2]
+    G --> J[Nested Item 2.1]
+    G --> K[Nested Item 2.2]
     
     style A fill:#2d3748,stroke:#4a5568
     style B fill:#2d3748,stroke:#4a5568
@@ -164,8 +164,7 @@ graph TD
     subgraph Sidebar
         B --> D[Document Tree]
         D --> E[Section Items]
-        E --> F[Chapter Items]
-        F --> G[Subchapter Items]
+        E --> F[Dynamic Content Items]
     end
 
     subgraph Content
@@ -181,7 +180,7 @@ graph TD
 graph LR
     subgraph API
         A[HTMX Endpoints] --> B[Document Service]
-        A --> C[Content Service]
+        A --> C[Templates Service]
         A --> D[Auto-save Service]
     end
 
@@ -196,33 +195,76 @@ graph LR
 
 ### Frontend
 - **Templates**
-  - `index.html`: Main application layout
-  - `create_edit_document.html`: Document creation and editing interface
+  - `index.html`: Main application layout with sidebar and content area
+  - `create_edit_doc.html`: Document creation and editing interface
   - `docs_list.html`: Document listing and management
+  - `templates.html`: Template listing
+  - `template_form.html`: Template creation form
+  - `dashboard.html`: Dashboard view
   - `settings.html`: Application settings
+  - `users.html`: User management
+  - `partials/document_item.html`: Document item partial
+  - `partials/document_editor.html`: Document editor partial
 
 - **Static Assets**
-  - `styles.css`: Main application styles
-  - `styles_wizard.css`: Document creation wizard styles
-  - Custom icons and components
+  - `styles_wizard.css`: Main application styles
+  - `js/sidebar.js`: Sidebar functionality
 
 ### Backend
 - **Routes**
+  - Main Pages:
+    - `/`: Main entry point, renders index.html
+    - `/dashboard`: Dashboard page
+    - `/settings`: Settings page
+    - `/users`: Users management page
   - Document Management:
     - `/docs`: List all documents
-    - `/create-document`: Create new document
-    - `/edit-doc/<doc_id>`: Edit existing document
+    - `/create-document3`: Create new document with dynamic structure
     - `/delete-doc/<doc_id>`: Delete document
   - Content Management:
-    - `/load-content/<section_id>`: Load document section content
-    - `/load-content/chapter/<chapter_number>`: Load chapter content
-    - `/save-content/<section_id>`: Save section content
-    - `/auto-save-content/<section_id>`: Auto-save content changes
-  - Auto-save:
-    - `/auto-save`: Handle document auto-save
+    - `/get_document/<item_id>`: Get specific document item content
+    - `/add_document_item`: Add new item to document structure
+    - `/auto_save_document`: Handle document auto-save
+  - Template Management:
+    - `/templates`: List all templates
+    - `/templates-list`: Render template list partial
+    - `/template-form`: Template creation form
+    - `/create-template`: Create new template
+    - `/delete-template/<template_id>`: Delete template
+    - `/edit-template/<template_id>`: Edit template
 
 - **Database**
-  - MongoDB document structure:
+  - MongoDB Collections:
+    - `documents`: Permanent documents
+    - `temp_documents`: Temporary documents for editing
+    - `templates`: Document templates
+
+  - Document structure:
+    ```json
+    {
+      "_id": ObjectId,
+      "title": String,
+      "structure": [
+        {
+          "id": String,
+          "title": String,
+          "content": String,
+          "children": [
+            {
+              "id": String,
+              "title": String,
+              "content": String,
+              "children": []
+            }
+          ]
+        }
+      ],
+      "created_at": DateTime,
+      "updated_at": DateTime
+    }
+    ```
+
+  - Template structure:
     ```json
     {
       "_id": ObjectId,
@@ -232,23 +274,7 @@ graph LR
       "status": String,
       "introduction": String,
       "project_overview": String,
-      "scope": String,
-      "chapters": [
-        {
-          "number": Integer,
-          "title": String,
-          "content": String,
-          "subchapters": [
-            {
-              "number": Integer,
-              "title": String,
-              "content": String
-            }
-          ]
-        }
-      ],
-      "created_at": DateTime,
-      "updated_at": DateTime
+      "scope": String
     }
     ```
 
