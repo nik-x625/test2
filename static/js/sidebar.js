@@ -1,6 +1,5 @@
 // Initialize sidebar functionality
 function initSidebar() {
-    console.log("initSidebar function called"); // Added for debugging
     const sidebar = document.getElementById('sidebar');
     const sidebarWrapper = document.getElementById('sidebarWrapper');
     const sidebarToggle = document.getElementById('sidebarToggle');
@@ -93,29 +92,24 @@ function initSidebar() {
 }
 
 // Initialize on DOM content loaded
-document.addEventListener('DOMContentLoaded', initSidebar);
-
-// Reinitialize on HTMX content swap
-document.body.addEventListener('htmx:afterSwap', function(evt) {
-    // Update page title based on the loaded content
-    // const pageTitle = document.getElementById('pageTitle');
-    // if (pageTitle) {
-    //     const newTitle = evt.detail.target.querySelector('.card-title')?.textContent || 'Dashboard';
-    //     pageTitle.textContent = newTitle;
-    // }
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize sidebar
+    initSidebar();
     
-    // Update active state in sidebar
-    const menuButtons = document.querySelectorAll('.sidebar-menu-button');
-    if (menuButtons.length > 0) {
-        menuButtons.forEach(button => {
-            if (button.getAttribute('hx-get') === evt.detail.pathInfo.requestPath) {
-                button.classList.add('active');
-            } else {
-                button.classList.remove('active');
+    // Set up HTMX event handler
+    if (document.body) {
+        document.body.addEventListener('htmx:afterSwap', function(evt) {
+            // Update active state in sidebar
+            const menuButtons = document.querySelectorAll('.sidebar-menu-button');
+            if (menuButtons.length > 0) {
+                menuButtons.forEach(button => {
+                    if (button.getAttribute('hx-get') === evt.detail.pathInfo.requestPath) {
+                        button.classList.add('active');
+                    } else {
+                        button.classList.remove('active');
+                    }
+                });
             }
         });
     }
-    
-    // Reinitialize sidebar functionality
-    //initSidebar();
 }); 

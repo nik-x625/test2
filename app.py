@@ -197,8 +197,8 @@ def cleanup_inactive_documents():
     except Exception as e:
         logger.error(f"Error during temporary document cleanup: {str(e)}")
 
-@app.route('/create-document3', methods=['GET', 'POST'])
-def create_document3():
+@app.route('/create-edit-doc', methods=['GET', 'POST'])
+def create_edit_doc():
     # Get or create session ID
     session_id = request.cookies.get('session_id') or str(ObjectId())
     logger.info(f"Document session ID: {session_id}")
@@ -318,13 +318,13 @@ def auto_save_document():
     session_id = request.cookies.get('session_id')
     if not session_id:
         logger.warning("Auto-save attempted without session ID")
-        return jsonify({'status': 'error', 'message': 'No session found'}), 400
+        return "<span class='text-danger'>No session found</span>", 400
     
     try:
-        data = request.json
-        item_id = data.get('item_id')
-        content = data.get('content')
-        title = data.get('title')
+        # Get form data instead of JSON data
+        item_id = request.form.get('item_id')
+        title = request.form.get('title')
+        content = request.form.get('content')
         
         logger.debug(f"Auto-save for item {item_id} in session {session_id}")
         
@@ -332,7 +332,7 @@ def auto_save_document():
         temp_doc = mongo.db.temp_documents.find_one({'session_id': session_id})
         if not temp_doc:
             logger.warning(f"Auto-save: Document not found for session {session_id}")
-            return jsonify({'status': 'error', 'message': 'Document not found'}), 404
+            return "<span class='text-danger'>Document not found</span>", 404
         
         # Update the specific item in the structure
         updated = update_document_item(temp_doc['structure'], item_id, content, title)
@@ -349,20 +349,19 @@ def auto_save_document():
                     }
                 }
             )
+            timestamp = datetime.utcnow().strftime('%H:%M:%S')
             logger.debug(f"Document auto-saved successfully for item {item_id}")
-            return jsonify({
-                'status': 'success', 
-                'message': 'Document auto-saved',
-                'timestamp': datetime.utcnow().strftime('%H:%M:%S')
-            })
+            return f"<span class='text-success'>Saved at {timestamp}</span>"
         
         logger.warning(f"Auto-save: Item {item_id} not found in document structure")
-        return jsonify({'status': 'error', 'message': 'Item not found in document'}), 404
+        return "<span class='text-danger'>Item not found in document</span>", 404
         
     except Exception as e:
         logger.error(f"Error during auto-save: {str(e)}", exc_info=True)
-        return jsonify({'status': 'error', 'message': str(e)}), 500
+        return f"<span class='text-danger'>Error saving: {str(e)}</span>", 500
 
+
+# this has been called when the user clicks on a document item to edit
 @app.route('/get_document/<item_id>', methods=['GET'])
 def get_document_item(item_id):
     """Get specific document item content for editing"""

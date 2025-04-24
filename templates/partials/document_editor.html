@@ -1,71 +1,48 @@
 <form class="p-4" id="editor-form">
-  <input type="hidden" id="current_item_id" value="{{ item.id }}">
+  <input type="hidden" id="current_item_id" name="item_id" value="{{ item.id }}">
   
   <div class="mb-3">
     <label for="title" class="form-label text-light">Title</label>
     <input type="text" class="form-control bg-dark text-light border-secondary" 
-      id="title" placeholder="Enter title" value="{{ item.title }}">
+      id="title" name="title" placeholder="Enter title" value="{{ item.title }}"
+      hx-post="/auto_save_document"
+      hx-trigger="keyup changed delay:2000ms, blur"
+      hx-include="#current_item_id, #content"
+      hx-target="#save-indicator"
+      hx-swap="innerHTML">
   </div>
   
   <div class="mb-3">
     <label for="content" class="form-label text-light">Content</label>
     <textarea class="form-control bg-dark text-light border-secondary" 
-      id="content" rows="12" placeholder="Enter content">{{ item.content }}</textarea>
+      id="content" name="content" rows="12" placeholder="Enter content"
+      hx-post="/auto_save_document"
+      hx-trigger="keyup changed delay:2000ms, blur"
+      hx-include="#current_item_id, #title"
+      hx-target="#save-indicator"
+      hx-swap="innerHTML">{{ item.content }}</textarea>
   </div>
   
   <div class="d-flex justify-content-between align-items-center">
-    <button type="submit" class="btn btn-primary">Save</button>
+    <button type="button" class="btn btn-primary"
+      hx-post="/auto_save_document"
+      hx-include="#current_item_id, #title, #content"
+      hx-target="#save-indicator"
+      hx-swap="innerHTML">Save</button>
     <div id="save-indicator" class="text-muted small"></div>
   </div>
 </form>
 
 <script>
-// Auto-save when user pauses typing
-let saveTimeout;
-const autoSave = () => {
-  clearTimeout(saveTimeout);
-  saveTimeout = setTimeout(() => {
+// Update the title in the sidebar when it changes
+document.addEventListener('htmx:afterRequest', function(evt) {
+  if (evt.detail.elt.id === 'title' || evt.detail.elt.classList.contains('btn-primary')) {
     const currentItemId = document.getElementById('current_item_id').value;
     const title = document.getElementById('title').value;
-    const content = document.getElementById('content').value;
-    
-    fetch('/auto_save_document', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        item_id: currentItemId,
-        title: title,
-        content: content
-      })
-    })
-    .then(response => response.json())
-    .then(data => {
-      if (data.status === 'success') {
-        document.getElementById('save-indicator').textContent = 'Saved at ' + data.timestamp;
-        // Update the title in the sidebar if changed
-        const sidebarItem = document.querySelector(`[data-item-id="${currentItemId}"] span`);
-        if (sidebarItem && title !== sidebarItem.textContent) {
-          sidebarItem.textContent = title;
-        }
-      }
-    })
-    .catch(error => {
-      console.error('Auto-save error:', error);
-      document.getElementById('save-indicator').textContent = 'Error saving';
-    });
-  }, 2000); // Save 2 seconds after user stops typing
-};
-
-// Add event listeners to form inputs
-document.getElementById('title').addEventListener('input', autoSave);
-document.getElementById('content').addEventListener('input', autoSave);
-
-// Handle form submission (explicit save)
-document.getElementById('editor-form').addEventListener('submit', function(e) {
-  e.preventDefault();
-  autoSave(); // Force immediate save
-  document.getElementById('save-indicator').textContent = 'Saving...';
+    const sidebarItem = document.querySelector(`[data-item-id="${currentItemId}"] span`);
+    if (sidebarItem && title !== sidebarItem.textContent) {
+      sidebarItem.textContent = title;
+    }
+  }
 });
 </script>
