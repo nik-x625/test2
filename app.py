@@ -305,7 +305,7 @@ def create_document3():
     
     # Set a cookie to identify this session
     response = make_response(render_template(
-        'create_doc_template3.html', 
+        'create_edit_doc.html', 
         document=temp_doc.get('structure', []),
         session_id=session_id
     ))
@@ -483,35 +483,6 @@ def delete_doc(doc_id):
     documents = list(mongo.db.documents.find())
     return render_template('docs_list.html', documents=documents)
 
-@app.route('/add-subchapter/<chapter_index>', methods=['GET'])
-def add_subchapter(chapter_index):
-    try:
-        # Get the current subchapter count from the request
-        subchapter_count = int(request.args.get('count', 0))
-        subchapter_index = subchapter_count + 1
-        
-        # Get the current document ID if it exists
-        doc_id = request.args.get('doc_id')
-        
-        # Add subchapter to the document if doc_id exists
-        if doc_id:
-            mongo.db.documents.update_one(
-                {'_id': ObjectId(doc_id)},
-                {'$push': {f'chapters.{int(chapter_index)-1}.subchapters': {
-                    'title': f'Subchapter {subchapter_index}',
-                    'content': ''
-                }}}
-            )
-        
-        return render_template('subchapter_section.html',
-                            chapter_index=chapter_index,
-                            subchapter_index=subchapter_index,
-                            chapter_number=chapter_index,
-                            subchapter_number=subchapter_index,
-                            subchapter_title=f'Subchapter {subchapter_index}')
-    except Exception as e:
-        logger.error(f"Error adding subchapter: {str(e)}")
-        return '', 500
 
 if __name__ == '__main__':
     logger.info('Starting Flask application')
