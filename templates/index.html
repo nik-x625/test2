@@ -422,10 +422,17 @@
               <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="navbarDropdownUser"
                 role="button" data-bs-toggle="dropdown" aria-expanded="false">
                 <i class="bi bi-person-circle fs-4 me-1"></i>
-                <!-- Optional: Add username dynamically -->
-                <!-- <span class="d-none d-sm-inline">Username</span> -->
+                <span class="d-none d-sm-inline">{{ current_user.username }}</span>
               </a>
               <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark" aria-labelledby="navbarDropdownUser">
+                <li>
+                  <div class="dropdown-item text-center border-bottom pb-2">
+                    <strong>{{ current_user.username }}</strong>
+                    {% if current_user.email %}
+                    <div class="small text-muted">{{ current_user.email }}</div>
+                    {% endif %}
+                  </div>
+                </li>
                 <li>
                   <a class="dropdown-item" href="#"><i class="bi bi-person me-2"></i>Profile</a>
                 </li>
@@ -436,7 +443,7 @@
                   <hr class="dropdown-divider" />
                 </li>
                 <li>
-                  <a class="dropdown-item" href="#"><i class="bi bi-box-arrow-right me-2"></i>Logout</a>
+                  <a class="dropdown-item" href="{{ url_for('logout') }}"><i class="bi bi-box-arrow-right me-2"></i>Logout</a>
                 </li>
               </ul>
             </li>

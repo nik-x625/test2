@@ -1,56 +1,205 @@
-from flask import Flask, render_template, request, jsonify, redirect, url_for, make_response, session
-from flask_pymongo import PyMongo
-from bson import ObjectId
+from flask import Flask, render_template, request, jsonify, redirect, url_for, make_response, session, flash
 import os
 import logging
 from logging.handlers import RotatingFileHandler
 from datetime import datetime, timedelta
-from database import DatabaseService
+from bson import ObjectId
 
-# Models - editable document structure - models.py
-from model.models import Section, Chapter, DocumentTemplate
+# Import configuration and database
+from config import Config
+from database import mongo, DatabaseService
 
+# Models
+from models_for_documents.models import Section, Chapter, DocumentTemplate
+from models_for_flask_login.models import User
+from flask_login import LoginManager, login_required, current_user, login_user, logout_user
 
-app = Flask(__name__, static_folder='static')
-app.config["MONGO_URI"] = os.getenv("MONGO_URI", "mongodb://localhost:27017/smartscope")
-mongo = PyMongo(app)
+# Create a logger
+logger = logging.getLogger()
+
+def create_app(config_class=Config):
+    # Create and configure the app
+    app = Flask(__name__, static_folder='static')
+    app.config.from_object(config_class)
+    
+    # Initialize MongoDB
+    mongo.init_app(app)
+    
+    # Setup logging
+    if not os.path.exists('logs'):
+        os.makedirs('logs')
+
+    # Create a file handler
+    file_handler = RotatingFileHandler('logs/app.log', maxBytes=5000000, backupCount=10)
+    file_handler.setFormatter(logging.Formatter(
+        '%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'
+    ))
+    file_handler.setLevel(logging.DEBUG)
+
+    # Create a console handler
+    console_handler = logging.StreamHandler()
+    console_handler.setFormatter(logging.Formatter(
+        '%(asctime)s %(levelname)s: %(message)s'
+    ))
+    console_handler.setLevel(logging.DEBUG)
+
+    # Set up the root logger
+    logger.setLevel(logging.DEBUG)
+    logger.addHandler(file_handler)
+    logger.addHandler(console_handler)
+    
+    # Initialize Flask-Login
+    login_manager = LoginManager()
+    login_manager.init_app(app)
+    login_manager.login_view = 'login'
+    login_manager.login_message = 'Please log in to access this page.'
+    
+    @login_manager.user_loader
+    def load_user(user_id):
+        return User.get_by_id(mongo, user_id)
+    
+    return app
+
+# Create the app instance
+app = create_app()
 db_service = DatabaseService(mongo)
 
-# Configure logging
-if not os.path.exists('logs'):
-    os.makedirs('logs')
+# Add custom template filters
+@app.template_filter('date')
+def date_filter(value, format='%Y-%m-%d %H:%M'):
+    """Format a datetime object to a string using the given format."""
+    if value is None:
+        return ""
+    if isinstance(value, str):
+        try:
+            value = datetime.fromisoformat(value)
+        except (ValueError, TypeError):
+            return value
+    return value.strftime(format)
 
-# Create a file handler
-file_handler = RotatingFileHandler('logs/app.log', maxBytes=5000000, backupCount=10)
-file_handler.setFormatter(logging.Formatter(
-    '%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'
-))
-file_handler.setLevel(logging.DEBUG)
+# Helper function to find and update a nested document item by ID
+def update_document_item(structure, item_id, content=None, title=None):
+    """Recursively search and update an item in the document structure"""
+    for item in structure:
+        if str(item.get('id')) == str(item_id):
+            if content is not None:
+                item['content'] = content
+            if title is not None:
+                item['title'] = title
+            return True
+        
+        # If this item has children, search there too
+        if 'children' in item and item['children']:
+            if update_document_item(item['children'], item_id, content, title):
+                return True
+    
+    return False
 
-# Create a console handler
-console_handler = logging.StreamHandler()
-console_handler.setFormatter(logging.Formatter(
-    '%(asctime)s %(levelname)s: %(message)s'
-))
-console_handler.setLevel(logging.DEBUG)
+# Function to schedule cleanup of inactive temporary documents
+def cleanup_inactive_documents():
+    """Remove temporary documents that have been inactive for more than 24 hours"""
+    cutoff_time = datetime.utcnow() - timedelta(hours=24)
+    
+    try:
+        inactive_docs = mongo.db.temp_documents.find({
+            'last_activity': {'$lt': cutoff_time}
+        })
+        
+        count = 0
+        for doc in inactive_docs:
+            mongo.db.temp_documents.delete_one({'_id': doc['_id']})
+            count += 1
+        
+        if count > 0:
+            logger.info(f"Cleaned up {count} inactive temporary documents")
+    except Exception as e:
+        logger.error(f"Error during temporary document cleanup: {str(e)}")
 
-# Get the root logger
-logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)
-logger.addHandler(file_handler)
-logger.addHandler(console_handler)
-
+# Basic routes
 @app.route('/')
+@login_required
 def index():
     logger.info('Accessing root page, redirecting to dashboard')
     return render_template('index.html')
 
+@app.route('/dashboard')
+def dashboard():
+    logger.info('Accessing dashboard page')
+    # Get document and template counts
+    documents_count = mongo.db.documents.count_documents({})
+    templates_count = mongo.db.templates.count_documents({})
+    
+    # Get recent documents (limit to 5)
+    recent_documents = list(mongo.db.documents.find().sort('created_at', -1).limit(5))
+    
+    return render_template('dashboard.html', 
+                          documents_count=documents_count, 
+                          templates_count=templates_count,
+                          recent_documents=recent_documents)
 
+@app.route('/users')
+def users():
+    logger.info('Accessing users page')
+    return render_template('users.html')
 
+@app.route('/settings')
+def settings():
+    logger.info('Accessing settings page')
+    return render_template('settings.html')
 
+@app.route('/delete-account', methods=['POST'])
+@login_required
+def delete_account():
+    """Delete user account and all associated data"""
+    password = request.form.get('password')
+    confirmation = request.form.get('confirm')
+    
+    # Verify password and confirmation
+    if not password or not confirmation:
+        logger.warning(f'Account deletion attempt missing password or confirmation for user: {current_user.username}')
+        return render_template('settings.html', error="Password and confirmation required to delete account")
+    
+    # Verify correct password
+    if not current_user.check_password(password):
+        logger.warning(f'Account deletion attempt with incorrect password for user: {current_user.username}')
+        return render_template('settings.html', error="Incorrect password")
+    
+    user_id = current_user._id
+    username = current_user.username
+    
+    try:
+        # Delete all user data
+        # 1. Delete user's documents
+        mongo.db.documents.delete_many({'user_id': user_id})
+        
+        # 2. Delete user's templates 
+        mongo.db.templates.delete_many({'user_id': user_id})
+        
+        # 3. Delete temp documents
+        mongo.db.temp_documents.delete_many({'user_id': user_id})
+        
+        # 4. Finally delete the user account
+        mongo.db.users.delete_one({'_id': user_id})
+        
+        logger.info(f'Successfully deleted account for user: {username}')
+        
+        # Log the user out
+        logout_user()
+        
+        # Clear all cookies
+        response = make_response(redirect(url_for('login')))
+        response.delete_cookie('session_id')
+        
+        # Add flash message to be displayed after redirect
+        flash('Your account has been successfully deleted', 'success')
+        
+        return response
+        
+    except Exception as e:
+        logger.error(f'Error deleting account for user {username}: {str(e)}', exc_info=True)
+        return render_template('settings.html', error=f"Error deleting account: {str(e)}")
 
-
-# templates start
+# Template routes
 @app.route('/templates')
 def templates():
     logger.info('Accessing templates page')
@@ -125,82 +274,85 @@ def create_template():
     except Exception as e:
         logger.error(f"Error creating template: {str(e)}")
         return render_template('templates.html', templates=list(mongo.db.templates.find()), error="An error occurred. Please try again.")
-# templates end
 
+# Authentication routes
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if current_user.is_authenticated:
+        return redirect(url_for('dashboard'))
+        
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        
+        # Find user by username
+        user = User.get_by_username(mongo, username)
+        
+        # Check if user exists and password is correct
+        if user and user.check_password(password):
+            # Log in the user
+            login_user(user)
+            next_page = request.args.get('next')
+            return redirect(next_page or url_for('index'))
+        
+        logger.warning(f'Failed login attempt for username: {username}')
+        return render_template('login.html', error="Invalid username or password")
+        
+    return render_template('login.html')
 
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    response = make_response(redirect(url_for('login')))
+    response.delete_cookie('session_id')
+    return response
 
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if current_user.is_authenticated:
+        return redirect(url_for('dashboard'))
+        
+    if request.method == 'POST':
+        username = request.form.get('username')
+        email = request.form.get('email')
+        password = request.form.get('password')
+        
+        # Check if username or email already exists
+        if User.get_by_username(mongo, username):
+            return render_template('register.html', error="Username already exists")
+            
+        if User.get_by_email(mongo, email):
+            return render_template('register.html', error="Email already exists")
+            
+        # Create new user
+        user = User(username=username, email=email, password=password)
+        
+        # Save to database
+        mongo.db.users.insert_one(user.to_dict())
+        
+        # Log in the user
+        login_user(user)
+        
+        # Redirect to success page instead of dashboard
+        return redirect(url_for('registration_success'))
+        
+    return render_template('register.html')
 
+@app.route('/registration-success')
+@login_required
+def registration_success():
+    """Display registration success page"""
+    logger.info(f'User {current_user.username} viewing registration success page')
+    return render_template('registration_success.html')
 
-
-@app.route('/dashboard')
-def dashboard():
-    logger.info('Accessing dashboard page')
-    return render_template('dashboard.html')
-
-@app.route('/users')
-def users():
-    logger.info('Accessing users page')
-    return render_template('users.html')
-
-@app.route('/settings')
-def settings():
-    logger.info('Accessing settings page')
-    return render_template('settings.html')
-
-# Document Routes
+# Document routes
 @app.route('/docs')
 def docs():
     documents = list(mongo.db.documents.find())
     return render_template('docs_list.html', documents=documents)
 
-
-
-
-
-
-
-# Helper function to find and update a nested document item by ID
-def update_document_item(structure, item_id, content=None, title=None):
-    """Recursively search and update an item in the document structure"""
-    for item in structure:
-        if str(item.get('id')) == str(item_id):
-            if content is not None:
-                item['content'] = content
-            if title is not None:
-                item['title'] = title
-            return True
-        
-        # If this item has children, search there too
-        if 'children' in item and item['children']:
-            if update_document_item(item['children'], item_id, content, title):
-                return True
-    
-    return False
-
-# Function to schedule cleanup of inactive temporary documents
-def cleanup_inactive_documents():
-    """Remove temporary documents that have been inactive for more than 24 hours"""
-    cutoff_time = datetime.utcnow() - timedelta(hours=24)
-    
-    try:
-        inactive_docs = mongo.db.temp_documents.find({
-            'last_activity': {'$lt': cutoff_time}
-        })
-        
-        count = 0
-        for doc in inactive_docs:
-            mongo.db.temp_documents.delete_one({'_id': doc['_id']})
-            count += 1
-        
-        if count > 0:
-            logger.info(f"Cleaned up {count} inactive temporary documents")
-    except Exception as e:
-        logger.error(f"Error during temporary document cleanup: {str(e)}")
-
-
 @app.route('/create-edit-doc', methods=['GET', 'POST'])
-
-
 def create_edit_doc():
     """
     Route handler for document creation and editing functionality.
@@ -392,7 +544,6 @@ def auto_save_document():
         logger.error(f"Error during auto-save: {str(e)}", exc_info=True)
         return f"<span class='text-danger'>Error saving: {str(e)}</span>", 500
 
-
 # this has been called when the user clicks on a document item to edit
 @app.route('/get_document/<item_id>', methods=['GET'])
 def get_document_item(item_id):
@@ -507,14 +658,12 @@ def add_document_item():
 # scheduler = BackgroundScheduler()
 # scheduler.add_job(cleanup_inactive_documents, 'interval', hours=24)
 # scheduler.start()
-
 @app.route('/delete-doc/<doc_id>', methods=['DELETE'])
 def delete_doc(doc_id):
     mongo.db.documents.delete_one({'_id': ObjectId(doc_id)})
     documents = list(mongo.db.documents.find())
     return render_template('docs_list.html', documents=documents)
 
-
 if __name__ == '__main__':
-    logger.info('Starting Flask application')
-    app.run(host='0.0.0.0', debug=True, port=8000)
+    app.logger.info('Starting Flask application')
+    app.run(host=Config.HOST, debug=Config.DEBUG, port=Config.PORT)

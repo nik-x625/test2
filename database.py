@@ -1,9 +1,13 @@
 from datetime import datetime
 from bson import ObjectId
+from flask_pymongo import PyMongo
+
+# Create a global MongoDB instance
+mongo = PyMongo()
 
 class DatabaseService:
-    def __init__(self, mongo):
-        self.db = mongo.db
+    def __init__(self, mongo_instance):
+        self.db = mongo_instance.db
 
     def get_all_templates(self):
         """Get all templates sorted by creation date"""
