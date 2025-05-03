@@ -207,8 +207,8 @@ graph TD
     B --> G[docs_list.html]
     B --> H[templates.html]
     H --> I[template_form.html]
-    F --> J[partials/document_editor.html]
     F --> K[partials/document_item.html]
+    K --> J[partials/document_editor.html]
 ```
 
 #### Base Template (`base.html`)
