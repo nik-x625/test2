@@ -191,6 +191,147 @@ graph LR
     end
 ```
 
+## Flask Template Structure
+
+### Template Hierarchy and Rendering
+
+The application uses a hierarchical template structure that follows Flask's template inheritance pattern. Here's how the templates are organized and rendered:
+
+```mermaid
+graph TD
+    A[base.html] --> B[index.html]
+    A --> C[dashboard.html]
+    A --> D[settings.html]
+    A --> E[users.html]
+    B --> F[create_edit_doc.html]
+    B --> G[docs_list.html]
+    B --> H[templates.html]
+    H --> I[template_form.html]
+    F --> J[partials/document_editor.html]
+    F --> K[partials/document_item.html]
+```
+
+#### Base Template (`base.html`)
+- Serves as the root template containing the common layout structure
+- Defines the main HTML structure, meta tags, and common CSS/JS includes
+- Contains the main navigation and sidebar components
+- Uses Bootstrap 5 for styling and layout
+- Implements the dark theme through custom CSS
+
+#### Main Templates
+1. **`index.html`**
+   - Extends `base.html`
+   - Contains the main content area (`#mainContent`)
+   - Handles dynamic content loading through HTMX
+   - Manages the document tree and editor interface
+
+2. **`create_edit_doc.html`**
+   - Extends `index.html`
+   - Implements the document editor interface
+   - Includes document structure management
+   - Handles real-time content editing
+
+3. **`docs_list.html`**
+   - Extends `index.html`
+   - Displays the list of available documents
+   - Implements document filtering and sorting
+
+4. **`templates.html`**
+   - Extends `index.html`
+   - Manages document templates
+   - Includes template creation and editing functionality
+
+#### Partial Templates
+1. **`partials/document_editor.html`**
+   - Contains the document editing interface
+   - Implements the content editor
+   - Handles document structure modifications
+   - Manages auto-save functionality
+
+2. **`partials/document_item.html`**
+   - Represents individual document items
+   - Handles nested document structure
+   - Implements drag-and-drop functionality
+
+### Template Rendering Flow
+
+1. **Initial Request**
+   ```mermaid
+   sequenceDiagram
+       participant Client
+       participant Flask
+       participant Template
+       
+       Client->>Flask: Request Page
+       Flask->>Template: Render base.html
+       Template->>Flask: Return HTML
+       Flask->>Client: Send Response
+   ```
+
+2. **Dynamic Content Loading**
+   ```mermaid
+   sequenceDiagram
+       participant Client
+       participant HTMX
+       participant Flask
+       participant Template
+       
+       Client->>HTMX: Trigger Event
+       HTMX->>Flask: AJAX Request
+       Flask->>Template: Render Partial
+       Template->>Flask: Return HTML
+       Flask->>HTMX: Send Response
+       HTMX->>Client: Update DOM
+   ```
+
+### App.py's Role in Template Rendering
+
+The `app.py` file serves as the central controller for template rendering and route handling:
+
+1. **Route Definitions**
+   - Maps URLs to view functions
+   - Handles template rendering
+   - Manages data passing to templates
+
+2. **Template Context**
+   - Provides global template variables
+   - Handles user authentication state
+   - Manages session data
+
+3. **Dynamic Content**
+   - Processes HTMX requests
+   - Returns partial templates
+   - Manages real-time updates
+
+4. **Error Handling**
+   - Manages template rendering errors
+   - Provides error pages
+   - Handles invalid routes
+
+Example route handling:
+```python
+@app.route('/')
+def index():
+    if not session.get('user_id'):
+        return redirect(url_for('login'))
+    return render_template('index.html')
+```
+
+Example HTMX endpoint:
+```python
+@app.route('/get_document/<item_id>')
+def get_document(item_id):
+    # Fetch document data
+    doc_data = get_document_data(item_id)
+    return render_template('partials/document_item.html', item=doc_data)
+```
+
+This template structure allows for:
+- Efficient code reuse through template inheritance
+- Dynamic content updates without full page reloads
+- Clean separation of concerns between layout and content
+- Modular and maintainable code organization
+
 ## Architecture
 
 ### Frontend
