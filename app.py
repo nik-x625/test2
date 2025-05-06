@@ -78,6 +78,30 @@ def date_filter(value, format='%Y-%m-%d %H:%M'):
             return value
     return value.strftime(format)
 
+@app.template_filter('time_ago')
+def time_ago_filter(value):
+    """Format a datetime object to show how long ago it was."""
+    if not value:
+        return ""
+    
+    now = datetime.now()
+    diff = now - value
+    
+    # Convert to seconds
+    seconds = diff.total_seconds()
+    
+    if seconds < 60:
+        return f"{int(seconds)} seconds ago"
+    elif seconds < 3600:
+        minutes = int(seconds / 60)
+        return f"{minutes} minute{'s' if minutes != 1 else ''} ago"
+    elif seconds < 86400:
+        hours = int(seconds / 3600)
+        return f"{hours} hour{'s' if hours != 1 else ''} ago"
+    else:
+        days = int(seconds / 86400)
+        return f"{days} day{'s' if days != 1 else ''} ago"
+
 # Helper function to find and update a nested document item by ID
 def update_document_item(structure, item_id, content=None, title=None):
     """Recursively search and update an item in the document structure"""
@@ -95,26 +119,6 @@ def update_document_item(structure, item_id, content=None, title=None):
                 return True
     
     return False
-
-# Function to schedule cleanup of inactive temporary documents
-def cleanup_inactive_documents():
-    """Remove temporary documents that have been inactive for more than 24 hours"""
-    cutoff_time = datetime.utcnow() - timedelta(hours=24)
-    
-    try:
-        inactive_docs = mongo.db.temp_documents.find({
-            'last_activity': {'$lt': cutoff_time}
-        })
-        
-        count = 0
-        for doc in inactive_docs:
-            mongo.db.temp_documents.delete_one({'_id': doc['_id']})
-            count += 1
-        
-        if count > 0:
-            logger.info(f"Cleaned up {count} inactive temporary documents")
-    except Exception as e:
-        logger.error(f"Error during temporary document cleanup: {str(e)}")
 
 # Basic routes
 @app.route('/')
@@ -177,7 +181,7 @@ def delete_account():
         mongo.db.templates.delete_many({'user_id': user_id})
         
         # 3. Delete temp documents
-        mongo.db.temp_documents.delete_many({'user_id': user_id})
+        mongo.db.documents.delete_many({'user_id': user_id})
         
         # 4. Finally delete the user account
         mongo.db.users.delete_one({'_id': user_id})
@@ -351,171 +355,130 @@ def registration_success():
 @app.route('/docs')
 def docs():
     documents = list(mongo.db.documents.find())
-    return render_template('docs_list.html', documents=documents)
+    return render_template('docs_list.html', documents=documents, now=datetime.now())
 
-@login_required
 @app.route('/create-edit-doc', methods=['GET', 'POST'])
+@login_required
 def create_edit_doc():
     """
     Route handler for document creation and editing functionality.
-
-    This function manages both the creation of new documents and editing of existing ones:
-
-    For GET requests:
-    - Retrieves or generates a unique session ID for document editing
-    - Checks for an existing temporary document in the session
-    - If none exists, creates a new temporary document with sample structure
-    - Renders the document editing interface
-
-    For POST requests:
-    - Converts a temporary document into a permanent one
-    - Saves the document structure and metadata to the database
-    - Removes the temporary document
-    - Redirects to the document list
-
-    Parameters:
-        None (uses session and request data)
-
-    Returns:
-        GET: Rendered template for document editing interface
-        POST: Redirect to document list after saving
-
-    Session Data:
-        - Uses session_id cookie for document tracking
-        - Optionally uses user_id for document ownership
     """
-
-    # Get or create session ID
-    session_id = request.cookies.get('session_id') or str(ObjectId())
-    logger.info("current_user.is_authenticated: "+str(current_user.is_authenticated))
-    #logger.info("current_user.id: "+str(current_user._id))
-
-    logger.info(f"User ID: {current_user._id}")
-    logger.info(f"Session ID: {session_id}")
-    #logger.info(f"Document session ID: {session_id}, User ID: {current_user._id if current_user.is_authenticated else 'Not logged in'}")
-
-
-    ### for testing
-    if 0: #request.method == 'POST':
-        # When "Save" is clicked - convert temp document to permanent
-        draft_doc = mongo.db.documents.find_one({'user_id': user_id, 'doc_status': 'draft'})
+    user_id = current_user._id
+    
+    # Check if we're editing an existing document
+    doc_id = request.args.get('doc_id')
+    if doc_id:
+        # Load the existing document
+        existing_doc = mongo.db.documents.find_one({'_id': ObjectId(doc_id)})
+        if existing_doc:
+            # If the document is saved, create a new draft from it
+            if existing_doc.get('doc_status') == 'saved':
+                # Create a new draft document
+                draft_doc = {
+                    'user_id': user_id,
+                    'title': existing_doc.get('title', 'Untitled Document'),
+                    'structure': existing_doc.get('structure', []),
+                    'created_at': datetime.now(),
+                    'updated_at': datetime.now(),
+                    'doc_status': 'draft',
+                    'parent_doc_id': existing_doc['_id']  # Keep reference to original
+                }
+                mongo.db.documents.insert_one(draft_doc)
+                logger.info(f"Created new draft from saved document {doc_id} for user {user_id}")
+            else:
+                # Use the existing draft
+                draft_doc = existing_doc
+                logger.info(f"Using existing draft document {doc_id} for user {user_id}")
+        else:
+            logger.warning(f"Document {doc_id} not found")
+            return redirect(url_for('docs'))
+    else:
+        # Check for existing draft
+        draft_docs = list(mongo.db.documents.find({'user_id': user_id, 'doc_status': 'draft'}))
         
-        if draft_doc:
-            # Create permanent document from temp
-            saved_doc = {
-                'title': draft_doc.get('title', 'Untitled Document'),
-                'structure': draft_doc.get('structure', []),
+        if len(draft_docs) > 1:
+            logger.warning(f"There are duplicate draft documents for the user {user_id}. The draft documents must be only one in this version for each user")
+            # Use the most recent draft document
+            draft_doc = max(draft_docs, key=lambda x: x.get('updated_at', datetime.min))
+        else:
+            draft_doc = draft_docs[0] if draft_docs else None
+
+        if not draft_doc:
+            # Create a new temporary document with sample structure
+            doc = DocumentTemplate(
+                title="Project Report",
+                chapters=[
+                    Chapter(
+                        title="Chapter 1: Project Overview",
+                        content="This chapter provides an overview of the project."
+                    ),
+                    Chapter(
+                        title="Chapter 2: Project Activities",
+                        content="This chapter details the main activities.",
+                        sections=[
+                            Section(
+                                title="2.1: Software Installation",
+                                content="How the software was installed."
+                            ),
+                            Section(
+                                title="2.2: Software Tests",
+                                content="Testing approach and results."
+                            )
+                        ]
+                    ),
+                    Chapter(
+                        title="Chapter 3: Acceptance",
+                        content="Acceptance procedures and criteria."
+                    ),
+                    Chapter(
+                        title="Chapter 4: Final Payment",
+                        content="Final financial arrangements."
+                    )
+                ]
+            )
+            
+            # Convert to dict
+            doc_dict = doc.to_dict()
+            
+            # Process the structure to ensure each item has an ID
+            def ensure_ids(items):
+                processed = []
+                for item in items:
+                    if 'id' not in item:
+                        item['id'] = str(ObjectId())
+                    if 'children' in item and item['children']:
+                        item['children'] = ensure_ids(item['children'])
+                    processed.append(item)
+                return processed
+            
+            structure = ensure_ids(doc_dict['children'])
+            
+            # Store in documents collection as draft
+            draft_doc = {
+                'user_id': user_id,
+                'title': doc_dict['title'],
+                'structure': structure,
                 'created_at': datetime.now(),
                 'updated_at': datetime.now(),
-                'user_id': session.get('user_id', None)  # If user authentication is used
+                'doc_status': 'draft'
             }
             
-            # Insert as permanent document
-            result = mongo.db.documents.insert_one(saved_doc)
-            logger.info(f"Created permanent document from temporary: {result.inserted_id}")
-            
-            
-            # Redirect to the document list or view
-            return redirect(url_for('docs'))
+            mongo.db.documents.insert_one(draft_doc)
+            logger.info(f"Created new draft document for user {user_id}")
         else:
-            logger.warning(f"No temporary document found for session {session_id}")
-    
-    # For GET request
-    # Check if there's an existing temporary document for this session
-    user_id = current_user._id
-
-
-    draft_docs = list(mongo.db.documents.find({'user_id': user_id, 'doc_status': 'draft'}))
-    
-    # if there are duplicate draft documents for the user, use the most recent one
-    if len(draft_docs) > 1:
-        logger.warning(f"There are duplicate draft documents for the user {user_id}. The draft documents must be only one in this version for each user")
-        # Use the most recent draft document
-        draft_doc = max(draft_docs, key=lambda x: x.get('updated_at', datetime.min))
-    else:
-        draft_doc = draft_docs[0] if draft_docs else None
-
-    # if there is no draft document for the user, create a new one
-    if not draft_doc:
-        # Create a new temporary document with sample structure
-        doc = DocumentTemplate(
-            title="Project Report",
-            chapters=[
-                Chapter(
-                    title="Chapter 1: Project Overview",
-                    content="This chapter provides an overview of the project."
-                ),
-                Chapter(
-                    title="Chapter 2: Project Activities",
-                    content="This chapter details the main activities.",
-                    sections=[
-                        Section(
-                            title="2.1: Software Installation",
-                            content="How the software was installed."
-                        ),
-                        Section(
-                            title="2.2: Software Tests",
-                            content="Testing approach and results."
-                        )
-                    ]
-                ),
-                Chapter(
-                    title="Chapter 3: Acceptance",
-                    content="Acceptance procedures and criteria."
-                ),
-                Chapter(
-                    title="Chapter 4: Final Payment",
-                    content="Final financial arrangements."
-                )
-            ]
-        )
-        
-        # Convert to dict
-        doc_dict = doc.to_dict()
-        
-        # Process the structure to ensure each item has an ID
-        def ensure_ids(items):
-            processed = []
-            for item in items:
-                if 'id' not in item:
-                    item['id'] = str(ObjectId())
-                if 'children' in item and item['children']:
-                    item['children'] = ensure_ids(item['children'])
-                processed.append(item)
-            return processed
-        
-        structure = ensure_ids(doc_dict['children'])
-        
-        # Store in documents collection as draft
-        draft_doc = {
-            'user_id': user_id,
-            'title': doc_dict['title'],
-            'structure': structure,
-            'created_at': datetime.now(),
-            'updated_at': datetime.now(),
-            'doc_status': 'draft'
-        }
-        
-        mongo.db.documents.insert_one(draft_doc)
-        logger.info(f"Created new draft document for user {user_id}")
-    else:
-        # Update the last activity timestamp
-        mongo.db.documents.update_one(
-            {'user_id': user_id, 'doc_status': 'draft'},
-            {'$set': {'last_activity': datetime.now()}}
-        )
-        logger.info(f"Using existing draft document for user {user_id}")
-    
-    logger.info("# structure is: "+str(draft_doc.get('structure', [])))
+            # Update the last activity timestamp
+            mongo.db.documents.update_one(
+                {'_id': draft_doc['_id']},
+                {'$set': {'last_activity': datetime.now()}}
+            )
+            logger.info(f"Using existing draft document for user {user_id}")
 
     # Set a cookie to identify this session
     response = make_response(render_template(
         'create_edit_doc.html', 
         document=draft_doc.get('structure', []),
-        session_id=session_id
+        doc_id=str(draft_doc['_id'])
     ))
-
-    response.set_cookie('session_id', session_id, max_age=60*60*24)  # 24 hour cookie
     return response
 
 @app.route('/auto_save_document', methods=['POST'])
@@ -578,9 +541,9 @@ def get_document_item(item_id):
     
     try:
         # Find the document
-        draft_doc = mongo.db.documents.find_one({'user_id': user_id})
+        draft_doc = mongo.db.documents.find_one({'user_id': user_id, 'doc_status': 'draft'})
 
-        logger.info(f"Draft document found through get_document method is: {draft_doc}")
+        #logger.info(f"Draft document found through get_document method is: {draft_doc}")
         logger.info("item id we are looking for is: "+str(item_id))
         if not draft_doc:
             logger.error(f"Draft document not found for user {user_id}")
@@ -615,17 +578,17 @@ def get_document_item(item_id):
 @app.route('/add_document_item', methods=['POST'])
 def add_document_item():
     """Add a new chapter or section to the document"""
-    session_id = request.cookies.get('session_id')
-    if not session_id:
-        return jsonify({'status': 'error', 'message': 'No session found'}), 400
+    user_id = current_user._id
+    if not user_id:
+        return jsonify({'status': 'error', 'message': 'No user found'}), 400
     
     try:
         parent_id = request.form.get('parent_id', None)  # None for root level
         title = request.form.get('title', 'New Section')
         
         # Find the document
-        temp_doc = mongo.db.temp_documents.find_one({'session_id': session_id})
-        if not temp_doc:
+        draft_doc = mongo.db.documents.find_one({'user_id': user_id, 'doc_status': 'draft'})
+        if not draft_doc:
             return jsonify({'status': 'error', 'message': 'Document not found'}), 404
         
         # Create new item
@@ -638,7 +601,7 @@ def add_document_item():
         
         # If parent_id is None, add to root level
         if not parent_id:
-            temp_doc['structure'].append(new_item)
+            draft_doc['structure'].append(new_item)
             logger.info(f"Added new root-level item {new_item['id']}")
         else:
             # Find the parent and add to its children
@@ -654,19 +617,19 @@ def add_document_item():
                             return True
                 return False
             
-            if not add_to_parent(temp_doc['structure'], parent_id, new_item):
+            if not add_to_parent(draft_doc['structure'], parent_id, new_item):
                 return jsonify({'status': 'error', 'message': 'Parent item not found'}), 404
             
             logger.info(f"Added new item {new_item['id']} under parent {parent_id}")
         
         # Update the document
-        mongo.db.temp_documents.update_one(
-            {'session_id': session_id},
+        mongo.db.documents.update_one(
+            {'user_id': user_id, 'doc_status': 'draft'},
             {
                 '$set': {
-                    'structure': temp_doc['structure'],
-                    'updated_at': datetime.utcnow(),
-                    'last_activity': datetime.utcnow()
+                    'structure': draft_doc['structure'],
+                    'updated_at': datetime.now(),
+                    'last_activity': datetime.now()
                 }
             }
         )
@@ -692,6 +655,42 @@ def delete_doc(doc_id):
     mongo.db.documents.delete_one({'_id': ObjectId(doc_id)})
     documents = list(mongo.db.documents.find())
     return render_template('docs_list.html', documents=documents)
+
+@app.route('/save_document', methods=['POST'])
+@login_required
+def save_document():
+    """Save the current draft document and change its status to saved"""
+    user_id = current_user._id
+    
+    try:
+        # Find the draft document
+        draft_doc = mongo.db.documents.find_one({'user_id': user_id, 'doc_status': 'draft'})
+        if not draft_doc:
+            logger.warning(f"No draft document found for user {user_id}")
+            return jsonify({'status': 'error', 'message': 'No draft document found'}), 404
+        
+        # Update the document status to saved
+        result = mongo.db.documents.update_one(
+            {'_id': draft_doc['_id']},  # Use the specific document ID to ensure we only update this one
+            {
+                '$set': {
+                    'doc_status': 'saved',
+                    'updated_at': datetime.now(),
+                    'saved_at': datetime.now()
+                }
+            }
+        )
+        
+        if result.modified_count > 0:
+            logger.info(f"Document {draft_doc['_id']} saved successfully for user {user_id}")
+            return jsonify({'status': 'success', 'message': 'Document saved successfully'})
+        else:
+            logger.warning(f"Failed to save document {draft_doc['_id']} for user {user_id}")
+            return jsonify({'status': 'error', 'message': 'Failed to save document'}), 500
+            
+    except Exception as e:
+        logger.error(f"Error saving document: {str(e)}", exc_info=True)
+        return jsonify({'status': 'error', 'message': str(e)}), 500
 
 if __name__ == '__main__':
     app.logger.info('Starting Flask application')

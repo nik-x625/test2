@@ -116,7 +116,7 @@ graph LR
     A[User Input] --> B{Debounce Timer}
     B -->|500ms| C[Fetch Request]
     C --> D[/auto_save_document]
-    D --> E[MongoDB temp_documents]
+    D --> E[MongoDB documents]
     E --> F[Success Response]
     F --> G[Update Status]
 ```
@@ -377,7 +377,6 @@ This template structure allows for:
 - **Database**
   - MongoDB Collections:
     - `documents`: Permanent documents
-    - `temp_documents`: Temporary documents for editing
     - `templates`: Document templates
 
   - Document structure:
