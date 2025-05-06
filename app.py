@@ -353,11 +353,6 @@ def docs():
     documents = list(mongo.db.documents.find())
     return render_template('docs_list.html', documents=documents)
 
-
-
-
-
-
 @login_required
 @app.route('/create-edit-doc', methods=['GET', 'POST'])
 def create_edit_doc():
@@ -393,31 +388,32 @@ def create_edit_doc():
     # Get or create session ID
     session_id = request.cookies.get('session_id') or str(ObjectId())
     logger.info("current_user.is_authenticated: "+str(current_user.is_authenticated))
-    logger.info("current_user.id: "+str(current_user._id))
+    #logger.info("current_user.id: "+str(current_user._id))
 
-    logger.info(f"Document session ID: {session_id}")
+    logger.info(f"User ID: {current_user._id}")
+    logger.info(f"Session ID: {session_id}")
     #logger.info(f"Document session ID: {session_id}, User ID: {current_user._id if current_user.is_authenticated else 'Not logged in'}")
 
-    if request.method == 'POST':
+
+    ### for testing
+    if 0: #request.method == 'POST':
         # When "Save" is clicked - convert temp document to permanent
-        temp_doc = mongo.db.temp_documents.find_one({'session_id': session_id})
+        draft_doc = mongo.db.documents.find_one({'user_id': user_id, 'doc_status': 'draft'})
         
-        if temp_doc:
+        if draft_doc:
             # Create permanent document from temp
-            permanent_doc = {
-                'title': temp_doc.get('title', 'Untitled Document'),
-                'structure': temp_doc.get('structure', []),
-                'created_at': datetime.utcnow(),
-                'updated_at': datetime.utcnow(),
+            saved_doc = {
+                'title': draft_doc.get('title', 'Untitled Document'),
+                'structure': draft_doc.get('structure', []),
+                'created_at': datetime.now(),
+                'updated_at': datetime.now(),
                 'user_id': session.get('user_id', None)  # If user authentication is used
             }
             
             # Insert as permanent document
-            result = mongo.db.documents.insert_one(permanent_doc)
+            result = mongo.db.documents.insert_one(saved_doc)
             logger.info(f"Created permanent document from temporary: {result.inserted_id}")
             
-            # Delete the temporary document
-            mongo.db.temp_documents.delete_one({'session_id': session_id})
             
             # Redirect to the document list or view
             return redirect(url_for('docs'))
@@ -426,9 +422,21 @@ def create_edit_doc():
     
     # For GET request
     # Check if there's an existing temporary document for this session
-    temp_doc = mongo.db.temp_documents.find_one({'session_id': session_id})
+    user_id = current_user._id
+
+
+    draft_docs = list(mongo.db.documents.find({'user_id': user_id, 'doc_status': 'draft'}))
     
-    if not temp_doc:
+    # if there are duplicate draft documents for the user, use the most recent one
+    if len(draft_docs) > 1:
+        logger.warning(f"There are duplicate draft documents for the user {user_id}. The draft documents must be only one in this version for each user")
+        # Use the most recent draft document
+        draft_doc = max(draft_docs, key=lambda x: x.get('updated_at', datetime.min))
+    else:
+        draft_doc = draft_docs[0] if draft_docs else None
+
+    # if there is no draft document for the user, create a new one
+    if not draft_doc:
         # Create a new temporary document with sample structure
         doc = DocumentTemplate(
             title="Project Report",
@@ -443,7 +451,7 @@ def create_edit_doc():
                     sections=[
                         Section(
                             title="2.1: Software Installation",
-                            content="How the software was installed.xxyy2"
+                            content="How the software was installed."
                         ),
                         Section(
                             title="2.2: Software Tests",
@@ -478,50 +486,45 @@ def create_edit_doc():
         
         structure = ensure_ids(doc_dict['children'])
         
-        # Store in temp collection
-        temp_doc = {
-            'session_id': session_id,
+        # Store in documents collection as draft
+        draft_doc = {
+            'user_id': user_id,
             'title': doc_dict['title'],
             'structure': structure,
-            'created_at': datetime.utcnow(),
-            'updated_at': datetime.utcnow(),
-            'last_activity': datetime.utcnow()
+            'created_at': datetime.now(),
+            'updated_at': datetime.now(),
+            'doc_status': 'draft'
         }
         
-        mongo.db.temp_documents.insert_one(temp_doc)
-        logger.info(f"Created new temporary document for session {session_id}")
+        mongo.db.documents.insert_one(draft_doc)
+        logger.info(f"Created new draft document for user {user_id}")
     else:
         # Update the last activity timestamp
-        mongo.db.temp_documents.update_one(
-            {'session_id': session_id},
-            {'$set': {'last_activity': datetime.utcnow()}}
+        mongo.db.documents.update_one(
+            {'user_id': user_id, 'doc_status': 'draft'},
+            {'$set': {'last_activity': datetime.now()}}
         )
-        logger.info(f"Using existing temporary document for session {session_id}")
+        logger.info(f"Using existing draft document for user {user_id}")
     
+    logger.info("# structure is: "+str(draft_doc.get('structure', [])))
+
     # Set a cookie to identify this session
     response = make_response(render_template(
         'create_edit_doc.html', 
-        document=temp_doc.get('structure', []),
+        document=draft_doc.get('structure', []),
         session_id=session_id
     ))
+
     response.set_cookie('session_id', session_id, max_age=60*60*24)  # 24 hour cookie
     return response
-
-
-
-
-
-
-
-
 
 @app.route('/auto_save_document', methods=['POST'])
 def auto_save_document():
     """Auto-save document content as user types"""
-    session_id = request.cookies.get('session_id')
-    if not session_id:
-        logger.warning("Auto-save attempted without session ID")
-        return "<span class='text-danger'>No session found</span>", 400
+    user_id = current_user._id
+    if not user_id:
+        logger.warning("Auto-save attempted without user ID")
+        return "<span class='text-danger'>No user found</span>", 400
     
     try:
         # Get form data instead of JSON data
@@ -529,30 +532,30 @@ def auto_save_document():
         title = request.form.get('title')
         content = request.form.get('content')
         
-        logger.debug(f"Auto-save for item {item_id} in session {session_id}")
+        logger.debug(f"Auto-save for item {item_id} for user {user_id}")
         
         # Find the document
-        temp_doc = mongo.db.temp_documents.find_one({'session_id': session_id})
-        if not temp_doc:
-            logger.warning(f"Auto-save: Document not found for session {session_id}")
+        draft_doc = mongo.db.documents.find_one({'user_id': user_id, 'doc_status': 'draft'})
+        if not draft_doc:
+            logger.warning(f"Auto-save: Document not found for user {user_id}")
             return "<span class='text-danger'>Document not found</span>", 404
         
         # Update the specific item in the structure
-        updated = update_document_item(temp_doc['structure'], item_id, content, title)
+        updated = update_document_item(draft_doc['structure'], item_id, content, title)
         
         if updated:
             # Update the document in the database
-            mongo.db.temp_documents.update_one(
-                {'session_id': session_id},
+            mongo.db.documents.update_one(
+                {'user_id': user_id, 'doc_status': 'draft'},
                 {
                     '$set': {
-                        'structure': temp_doc['structure'],
-                        'updated_at': datetime.utcnow(),
-                        'last_activity': datetime.utcnow()
+                        'structure': draft_doc['structure'],
+                        'updated_at': datetime.now(),
+                        'last_activity': datetime.now()
                     }
                 }
             )
-            timestamp = datetime.utcnow().strftime('%H:%M:%S')
+            timestamp = datetime.now().strftime('%H:%M:%S')
             logger.debug(f"Document auto-saved successfully for item {item_id}")
             return f"<span class='text-success'>Saved at {timestamp}</span>"
         
@@ -567,15 +570,21 @@ def auto_save_document():
 @app.route('/get_document/<item_id>', methods=['GET'])
 def get_document_item(item_id):
     """Get specific document item content for editing"""
-    session_id = request.cookies.get('session_id')
-    if not session_id:
-        return "<p>Session expired. Please refresh the page.</p>", 400
+    user_id = current_user._id
+    
+    #session_id = request.cookies.get('session_id')
+    #if not session_id:
+    #    return "<p>Session expired. Please refresh the page.</p>", 400
     
     try:
         # Find the document
-        temp_doc = mongo.db.temp_documents.find_one({'session_id': session_id})
-        if not temp_doc:
-            return "<p>Document not found. Please refresh the page.</p>", 404
+        draft_doc = mongo.db.documents.find_one({'user_id': user_id})
+
+        logger.info(f"Draft document found through get_document method is: {draft_doc}")
+        logger.info("item id we are looking for is: "+str(item_id))
+        if not draft_doc:
+            logger.error(f"Draft document not found for user {user_id}")
+            return "<p>Draft document not found. Check the system logs for more details.</p>", 404
         
         # Find the specific item (helper function)
         def find_item(items, target_id):
@@ -588,15 +597,16 @@ def get_document_item(item_id):
                         return found
             return None
         
-        item = find_item(temp_doc['structure'], item_id)
-        
+        item = find_item(draft_doc['structure'], item_id)
+        logger.info(f"Item found through get_document method is: {item}")
         if item:
             # Render the editor with this item's content
             return render_template('partials/document_editor.html', 
                                   item=item,
-                                  session_id=session_id)
+                                  user_id=user_id)
         
-        return "<p>Document section not found.</p>", 404
+        logger.error(f"Document section not found for item {item_id}")
+        return "<p>Document section not found. Check the system logs for more details.</p>", 404
         
     except Exception as e:
         logger.error(f"Error getting document item: {str(e)}", exc_info=True)
