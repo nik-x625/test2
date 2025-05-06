@@ -386,8 +386,12 @@ def create_edit_doc():
 
     # Get or create session ID
     session_id = request.cookies.get('session_id') or str(ObjectId())
+    logger.info("current_user.is_authenticated: "+str(current_user.is_authenticated))
+    logger.info("current_user.id: "+str(current_user._id))
+
     logger.info(f"Document session ID: {session_id}")
-    
+    #logger.info(f"Document session ID: {session_id}, User ID: {current_user._id if current_user.is_authenticated else 'Not logged in'}")
+
     if request.method == 'POST':
         # When "Save" is clicked - convert temp document to permanent
         temp_doc = mongo.db.temp_documents.find_one({'session_id': session_id})
