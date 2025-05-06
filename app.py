@@ -353,6 +353,12 @@ def docs():
     documents = list(mongo.db.documents.find())
     return render_template('docs_list.html', documents=documents)
 
+
+
+
+
+
+@login_required
 @app.route('/create-edit-doc', methods=['GET', 'POST'])
 def create_edit_doc():
     """
@@ -500,6 +506,14 @@ def create_edit_doc():
     ))
     response.set_cookie('session_id', session_id, max_age=60*60*24)  # 24 hour cookie
     return response
+
+
+
+
+
+
+
+
 
 @app.route('/auto_save_document', methods=['POST'])
 def auto_save_document():
