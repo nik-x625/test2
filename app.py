@@ -697,17 +697,16 @@ def save_document():
         logger.error(f"Error saving document: {str(e)}", exc_info=True)
         return jsonify({'status': 'error', 'message': str(e)}), 500
 
-
-
-
-
-
 @app.get("/edit-title-form")
 def edit_title_form():
     doc_id = request.args.get('doc_id')
     doc_title = request.args.get('doc_title')
+    action = request.args.get('action')
     
-    logger.info(f"Edit title form requested for doc_id: {doc_id}, doc_title: {doc_title}")
+    logger.info(f"Edit title form requested for doc_id: {doc_id}, doc_title: {doc_title}, action: {action}")
+    
+    if action == 'cancel':
+        return render_template("partials/_title.html", doc_id=doc_id, doc_title=doc_title)
     
     if not doc_id or not doc_title:
         return "Missing required parameters", 400
@@ -720,7 +719,7 @@ def edit_title_form():
           <button type="submit" class="btn btn-success btn-sm">Save</button>
           <button type="button" 
                   class="btn btn-outline-secondary btn-sm"
-                  hx-get="/edit-title?doc_id={doc_id}&doc_title={doc_title}&action=cancel"
+                  hx-get="/edit-title-form?doc_id={doc_id}&doc_title={doc_title}&action=cancel"
                   hx-target="#title-container"
                   hx-swap="innerHTML">
             Cancel
@@ -728,22 +727,55 @@ def edit_title_form():
       </form>
     '''
 
-@app.route("/edit-title", methods=["GET", "POST"])
+@app.route("/edit-title", methods=["POST"])
 def edit_title():
-    doc_id = request.args.get('doc_id') or request.form.get('doc_id')
+    doc_id = request.form.get('doc_id')
     current_title = request.form.get('current_title')
-    
-    # If it's a GET request with action=cancel, or if no new title was provided
-    if request.method == "GET" and request.args.get('action') == 'cancel':
-        return render_template("partials/_title.html", doc_id=doc_id, doc_title=request.args.get('doc_title'))
-        
-    # For POST requests (save)
     new_title = request.form.get("title", "").strip()
+    
     if not new_title:
         return "Title is required", 400
         
     logger.info(f"Updating title for doc_id: {doc_id} from '{current_title}' to '{new_title}'")
-    return render_template("partials/_title.html", doc_id=doc_id, doc_title=new_title)
+    
+    try:
+        # First verify the document exists and has the current title
+        doc = mongo.db.documents.find_one({
+            '_id': ObjectId(doc_id),
+            'title': current_title
+        })
+        
+        if not doc:
+            logger.warning(f"Document {doc_id} not found or title mismatch")
+            return "Document not found or title mismatch", 404
+            
+        # Update the document in MongoDB
+        result = mongo.db.documents.update_one(
+            {'_id': ObjectId(doc_id)},
+            {
+                '$set': {
+                    'title': new_title,
+                    'updated_at': datetime.now()
+                }
+            }
+        )
+        
+        if result.modified_count > 0:
+            # Verify the update was successful
+            updated_doc = mongo.db.documents.find_one({'_id': ObjectId(doc_id)})
+            if updated_doc and updated_doc.get('title') == new_title:
+                logger.info(f"Successfully updated title for document {doc_id}")
+                return render_template("partials/_title.html", doc_id=doc_id, doc_title=new_title)
+            else:
+                logger.error(f"Update verification failed for document {doc_id}")
+                return "Update verification failed", 500
+        else:
+            logger.warning(f"No changes made to document {doc_id}")
+            return "Failed to update title", 400
+            
+    except Exception as e:
+        logger.error(f"Error updating document title: {str(e)}", exc_info=True)
+        return str(e), 500
 
 if __name__ == '__main__':
     app.logger.info('Starting Flask application')
