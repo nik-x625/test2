@@ -357,6 +357,8 @@ def docs():
     documents = list(mongo.db.documents.find())
     return render_template('docs_list.html', documents=documents, now=datetime.now())
 
+
+
 @app.route('/create-edit-doc', methods=['GET', 'POST'])
 @login_required
 def create_edit_doc():
@@ -367,44 +369,36 @@ def create_edit_doc():
     
     # Check if we're editing an existing document
     doc_id = request.args.get('doc_id')
+    
     if doc_id:
-        # Load the existing document
+        # Load the existing document from the database
         existing_doc = mongo.db.documents.find_one({'_id': ObjectId(doc_id)})
+        
         if existing_doc:
-            # If the document is saved, create a new draft from it
             if existing_doc.get('doc_status') == 'saved':
-                # Create a new draft document
-                draft_doc = {
-                    'user_id': user_id,
-                    'title': existing_doc.get('title', 'Untitled Document'),
-                    'structure': existing_doc.get('structure', []),
-                    'created_at': datetime.now(),
-                    'updated_at': datetime.now(),
-                    'doc_status': 'draft',
-                    'parent_doc_id': existing_doc['_id']  # Keep reference to original
-                }
-                mongo.db.documents.insert_one(draft_doc)
-                logger.info(f"Created new draft from saved document {doc_id} for user {user_id}")
+                # If the document is 'saved', load it directly into the editor (no need to create a new draft)
+                draft_doc = existing_doc
+                logger.info(f"Loading saved document {doc_id} for user {user_id}")
             else:
-                # Use the existing draft
+                # If the document is a draft or not saved, continue with the draft document
                 draft_doc = existing_doc
                 logger.info(f"Using existing draft document {doc_id} for user {user_id}")
         else:
+            # If the document is not found, log the error and redirect to the documents list
             logger.warning(f"Document {doc_id} not found")
             return redirect(url_for('docs'))
     else:
-        # Check for existing draft
-        draft_docs = list(mongo.db.documents.find({'user_id': user_id, 'doc_status': 'draft'}))
+        # No document ID provided means we're either creating a new document or working with drafts
         
-        if len(draft_docs) > 1:
-            logger.warning(f"There are duplicate draft documents for the user {user_id}. The draft documents must be only one in this version for each user")
-            # Use the most recent draft document
-            draft_doc = max(draft_docs, key=lambda x: x.get('updated_at', datetime.min))
-        else:
-            draft_doc = draft_docs[0] if draft_docs else None
+        # Fetch all drafts for the current user
+        draft_docs = list(mongo.db.documents.find({'user_id': user_id, 'doc_status': 'draft'}))
 
-        if not draft_doc:
-            # Create a new temporary document with sample structure
+        if len(draft_docs) > 0:
+            # If there are existing drafts, use the most recent one
+            draft_doc = max(draft_docs, key=lambda x: x.get('updated_at', datetime.min))
+            logger.info(f"Using existing draft document {draft_doc['_id']} for user {user_id}")
+        else:
+            # No drafts exist, create a new draft document
             doc = DocumentTemplate(
                 title="draft1 - proposal for a new project",
                 chapters=[
@@ -437,27 +431,11 @@ def create_edit_doc():
                 ]
             )
             
-            # Convert to dict
+            # Convert the document structure to a dictionary and ensure each item has an ID
             doc_dict = doc.to_dict()
-
-            logger.info(f"Document dict is: {doc_dict}")
-            
-            # Process the structure to ensure each item has an ID
-            def ensure_ids(items):
-                processed = []
-                for item in items:
-                    if 'id' not in item:
-                        item['id'] = str(ObjectId())
-                    if 'children' in item and item['children']:
-                        item['children'] = ensure_ids(item['children'])
-                    processed.append(item)
-                return processed
-            
             structure = ensure_ids(doc_dict['children'])
 
-            logger.info(f"Structure is: {structure}")
-            
-            # Store in documents collection as draft
+            # Create a new draft document to insert into the database
             draft_doc = {
                 'user_id': user_id,
                 'title': doc_dict['title'],
@@ -469,15 +447,14 @@ def create_edit_doc():
             
             mongo.db.documents.insert_one(draft_doc)
             logger.info(f"Created new draft document for user {user_id}")
-        else:
-            # Update the last activity timestamp
-            mongo.db.documents.update_one(
-                {'_id': draft_doc['_id']},
-                {'$set': {'last_activity': datetime.now()}}
-            )
-            logger.info(f"Using existing draft document for user {user_id}")
 
-    # Set a cookie to identify this session
+        # Update the last activity timestamp for the draft document
+        mongo.db.documents.update_one(
+            {'_id': draft_doc['_id']},
+            {'$set': {'last_activity': datetime.now()}}
+        )
+    
+    # Set a response with the document structure for rendering in the editor
     response = make_response(render_template(
         'create_edit_doc.html', 
         document=draft_doc.get('structure', []),
@@ -485,6 +462,20 @@ def create_edit_doc():
         doc_title=draft_doc.get('title', 'Untitled Document')  # Pass the document title
     ))
     return response
+
+# Ensure that each item in the structure has an 'id', especially for nested children (chapters/sections)
+def ensure_ids(items):
+    processed = []
+    for item in items:
+        if 'id' not in item:
+            item['id'] = str(ObjectId())  # Generate a new unique ID for each item
+        if 'children' in item and item['children']:
+            # Recursively ensure nested items (children) have IDs as well
+            item['children'] = ensure_ids(item['children'])
+        processed.append(item)
+    return processed
+
+
 
 @app.route('/auto_save_document', methods=['POST'])
 def auto_save_document():
@@ -535,24 +526,27 @@ def auto_save_document():
         return f"<span class='text-danger'>Error saving: {str(e)}</span>", 500
 
 # this has been called when the user clicks on a document item to edit
-@app.route('/get_document/<item_id>', methods=['GET'])
-def get_document_item(item_id):
+@app.route('/get_document', methods=['GET'])
+def get_document_item():
     """Get specific document item content for editing"""
+    doc_id = request.args.get('doc_id')
+    item_id = request.args.get('item_id')
     user_id = current_user._id
     
-    #session_id = request.cookies.get('session_id')
-    #if not session_id:
-    #    return "<p>Session expired. Please refresh the page.</p>", 400
+    if not doc_id or not item_id:
+        return "Missing required parameters", 400
     
     try:
-        # Find the document
-        draft_doc = mongo.db.documents.find_one({'user_id': user_id, 'doc_status': 'draft'})
+        # Find the document using both user_id and doc_id
+        draft_doc = mongo.db.documents.find_one({
+            '_id': ObjectId(doc_id),
+            'user_id': user_id
+        })
 
-        #logger.info(f"Draft document found through get_document method is: {draft_doc}")
-        logger.info("item id we are looking for is: "+str(item_id))
+        logger.info(f"Looking for item {item_id} in document {doc_id}")
         if not draft_doc:
-            logger.error(f"Draft document not found for user {user_id}")
-            return "<p>Draft document not found. Check the system logs for more details.</p>", 404
+            logger.error(f"Document {doc_id} not found for user {user_id}")
+            return "<p>Document not found. Check the system logs for more details.</p>", 404
         
         # Find the specific item (helper function)
         def find_item(items, target_id):
@@ -571,9 +565,10 @@ def get_document_item(item_id):
             # Render the editor with this item's content
             return render_template('partials/document_editor.html', 
                                   item=item,
+                                  doc_id=doc_id,
                                   user_id=user_id)
         
-        logger.error(f"Document section not found for item {item_id}")
+        logger.error(f"Document section {item_id} not found in document {doc_id}")
         return "<p>Document section not found. Check the system logs for more details.</p>", 404
         
     except Exception as e:

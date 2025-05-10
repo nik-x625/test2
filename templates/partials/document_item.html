@@ -17,7 +17,7 @@
   </div>
 {% else %}
   <div class="doc-item">
-    <div class="doc-item-content" hx-get="/get_document/{{ item.id }}" hx-target="#editor-content" data-item-id="{{ item.id }}">
+    <div class="doc-item-content" hx-get="/get_document?doc_id={{ doc_id }}&item_id={{ item.id }}" hx-target="#editor-content" data-item-id="{{ item.id }}" data-doc-id="{{ doc_id }}">
       <i class="bi bi-file-text me-2 text-light"></i>
       <span class="text-light">{{ item.title }}</span>
     </div>
