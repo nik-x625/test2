@@ -406,7 +406,7 @@ def create_edit_doc():
         if not draft_doc:
             # Create a new temporary document with sample structure
             doc = DocumentTemplate(
-                title="Project Report",
+                title="draft1 - proposal for a new project",
                 chapters=[
                     Chapter(
                         title="Chapter 1: Project Overview",
@@ -439,6 +439,8 @@ def create_edit_doc():
             
             # Convert to dict
             doc_dict = doc.to_dict()
+
+            logger.info(f"Document dict is: {doc_dict}")
             
             # Process the structure to ensure each item has an ID
             def ensure_ids(items):
@@ -452,6 +454,8 @@ def create_edit_doc():
                 return processed
             
             structure = ensure_ids(doc_dict['children'])
+
+            logger.info(f"Structure is: {structure}")
             
             # Store in documents collection as draft
             draft_doc = {
@@ -477,7 +481,8 @@ def create_edit_doc():
     response = make_response(render_template(
         'create_edit_doc.html', 
         document=draft_doc.get('structure', []),
-        doc_id=str(draft_doc['_id'])
+        doc_id=str(draft_doc['_id']),
+        doc_title=draft_doc.get('title', 'Untitled Document')  # Pass the document title
     ))
     return response
 
@@ -691,6 +696,54 @@ def save_document():
     except Exception as e:
         logger.error(f"Error saving document: {str(e)}", exc_info=True)
         return jsonify({'status': 'error', 'message': str(e)}), 500
+
+
+
+
+
+
+@app.get("/edit-title-form")
+def edit_title_form():
+    doc_id = request.args.get('doc_id')
+    doc_title = request.args.get('doc_title')
+    
+    logger.info(f"Edit title form requested for doc_id: {doc_id}, doc_title: {doc_title}")
+    
+    if not doc_id or not doc_title:
+        return "Missing required parameters", 400
+        
+    return f'''
+      <form hx-post="/edit-title" hx-target="#title-container" hx-swap="innerHTML" class="d-flex gap-2">
+          <input type="hidden" name="doc_id" value="{doc_id}">
+          <input type="hidden" name="current_title" value="{doc_title}">
+          <input type="text" name="title" class="form-control" value="{doc_title}" required>
+          <button type="submit" class="btn btn-success btn-sm">Save</button>
+          <button type="button" 
+                  class="btn btn-outline-secondary btn-sm"
+                  hx-get="/edit-title?doc_id={doc_id}&doc_title={doc_title}&action=cancel"
+                  hx-target="#title-container"
+                  hx-swap="innerHTML">
+            Cancel
+          </button>
+      </form>
+    '''
+
+@app.route("/edit-title", methods=["GET", "POST"])
+def edit_title():
+    doc_id = request.args.get('doc_id') or request.form.get('doc_id')
+    current_title = request.form.get('current_title')
+    
+    # If it's a GET request with action=cancel, or if no new title was provided
+    if request.method == "GET" and request.args.get('action') == 'cancel':
+        return render_template("partials/_title.html", doc_id=doc_id, doc_title=request.args.get('doc_title'))
+        
+    # For POST requests (save)
+    new_title = request.form.get("title", "").strip()
+    if not new_title:
+        return "Title is required", 400
+        
+    logger.info(f"Updating title for doc_id: {doc_id} from '{current_title}' to '{new_title}'")
+    return render_template("partials/_title.html", doc_id=doc_id, doc_title=new_title)
 
 if __name__ == '__main__':
     app.logger.info('Starting Flask application')
