@@ -47,18 +47,18 @@ and save/cancel buttons. The form uses HTMX for asynchronous updates.
     <div>
       <!-- Save button with auto-save functionality -->
       <!-- Opens the save document modal when clicked -->
-      <button type="button" class="btn btn-primary me-2"
+      <button type="button" class="btn btn-primary me-1"
         hx-post="/auto_save_document"
         hx-include="#current_item_id, #title, #content"
         hx-target="#save-indicator"
         hx-swap="innerHTML"
         data-bs-toggle="modal" data-bs-target="#saveDocumentModal">
-        <i class="bi bi-check-lg me-1"></i>Save
+        <i class="bi bi-check-lg"></i>Save
       </button>
       <!-- Cancel button to reset the form -->
       <!-- Closes the save document modal when clicked -->
       <button type="button" class="btn btn-outline-secondary" onclick="document.querySelector('#editor-form').reset()">
-        <i class="bi bi-x-lg me-1"></i>Cancel
+        <i class="bi bi-x-lg"></i>Cancel
       </button>
     </div>
     <div class="text-end">
