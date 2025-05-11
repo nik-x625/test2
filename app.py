@@ -357,8 +357,6 @@ def docs():
     documents = list(mongo.db.documents.find())
     return render_template('docs_list.html', documents=documents, now=datetime.now())
 
-
-
 @app.route('/create-edit-doc', methods=['GET', 'POST'])
 @login_required
 def create_edit_doc():
@@ -400,7 +398,7 @@ def create_edit_doc():
         else:
             # No drafts exist, create a new draft document
             doc = DocumentTemplate(
-                title="draft1 - proposal for a new project",
+                title="proposal draft 1",
                 chapters=[
                     Chapter(
                         title="Chapter 1: Project Overview",
@@ -474,8 +472,6 @@ def ensure_ids(items):
             item['children'] = ensure_ids(item['children'])
         processed.append(item)
     return processed
-
-
 
 @app.route('/auto_save_document', methods=['POST'])
 def auto_save_document():
@@ -692,36 +688,21 @@ def save_document():
         logger.error(f"Error saving document: {str(e)}", exc_info=True)
         return jsonify({'status': 'error', 'message': str(e)}), 500
 
-@app.get("/edit-title-form")
+@app.route('/edit-title-form')
 def edit_title_form():
+    """Return the title edit form"""
     doc_id = request.args.get('doc_id')
     doc_title = request.args.get('doc_title')
     action = request.args.get('action')
     
-    logger.info(f"Edit title form requested for doc_id: {doc_id}, doc_title: {doc_title}, action: {action}")
-    
     if action == 'cancel':
-        return render_template("partials/_title.html", doc_id=doc_id, doc_title=doc_title)
+        # Return the title display template
+        return render_template('partials/_title.html', doc_id=doc_id, doc_title=doc_title)
     
-    if not doc_id or not doc_title:
-        return "Missing required parameters", 400
-        
-    return f'''
-      <form hx-post="/edit-title" hx-target="#title-container" hx-swap="innerHTML" class="d-flex gap-2">
-          <input type="hidden" name="doc_id" value="{doc_id}">
-          <input type="hidden" name="current_title" value="{doc_title}">
-          <input type="text" name="title" class="form-control" value="{doc_title}" required>
-          <button type="submit" class="btn btn-success btn-sm">Save</button>
-          <button type="button" 
-                  class="btn btn-outline-secondary btn-sm"
-                  hx-get="/edit-title-form?doc_id={doc_id}&doc_title={doc_title}&action=cancel"
-                  hx-target="#title-container"
-                  hx-swap="innerHTML">
-            Cancel
-          </button>
-      </form>
-    '''
+    # Return the edit form template
+    return render_template('partials/_title_edit_form.html', doc_id=doc_id, doc_title=doc_title)
 
+# this route is called when the user clicks on the edit title button
 @app.route("/edit-title", methods=["POST"])
 def edit_title():
     doc_id = request.form.get('doc_id')

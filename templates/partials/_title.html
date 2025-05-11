@@ -1,11 +1,12 @@
+<!-- the section to display the document Title and the EDIT button -->
 <div id="title-container">
   <div>
-    <h4 class="d-inline text-light">{{ doc_title }}</h4>
+    <h4 class="d-inline text-light fs-5 fw-light">{{ doc_title }}</h4>
     <button class="btn btn-sm btn-outline-primary ms-2"
             hx-get="/edit-title-form?doc_id={{ doc_id }}&doc_title={{ doc_title|urlencode }}" 
             hx-target="#title-container"
             hx-swap="innerHTML">
-      <i class="bi bi-pencil"></i> Edit
+      <i class="bi bi-pencil-square"></i>
     </button>
   </div>
 </div> 
