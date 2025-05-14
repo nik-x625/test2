@@ -18,6 +18,8 @@
   <script src="/static/js/sidebar.js"></script>
   <!-- Alpine.js for declarative UI -->
   <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+  <!-- Custom Bot Styles -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/bot-styles.css') }}">
 
   <style>
     :root {
@@ -496,6 +498,8 @@
     >
       <i class="bi bi-chat-dots"></i>
     </button>
+    
+    <!-- Chatbot Popup Box - Chat Box -->
     <div
       id="chatbot-popup"
       x-show="showChatbot"
@@ -505,7 +509,7 @@
       x-transition:leave="transition ease-in duration-150"
       x-transition:leave-start="opacity-100 translate-y-0"
       x-transition:leave-end="opacity-0 translate-y-4"
-      style="position: fixed; bottom: 100px; right: 32px; width: 400px; max-width: 95vw; z-index: 1060; display: none;"
+      style="position: fixed; bottom: 100px; right: 32px; width: 620px; max-width: 95vw; z-index: 1060; display: none;"
       @chatbot-close.window="showChatbot = false"
       @chatbot-open.window="showChatbot = true"
     ></div>
