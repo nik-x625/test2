@@ -136,6 +136,8 @@
                         <h3 class="mb-0">Chat Bot</h3>
                         <button type="button" class="chatbot-close-popup" aria-label="Close" title="Close">&times;</button>
                     </div>
+
+                    <!-- Chat container -->
                     <div class="card-body">
                         <div class="chat-container" id="chat-container">
                             <div class="message-container" id="message-container">
@@ -144,11 +146,15 @@
                                     Hello! I'm your chat assistant. How can I help you today?
                                 </div>
                             </div>
+
+                            <!-- Typing indicator -->
                             <div class="typing-indicator" id="typing-indicator">
                                 Bot is typing...
                             </div>
                         </div>
                     </div>
+
+                    <!-- Chat input form -->
                     <div class="card-footer">
                         <form hx-post="/send_message" 
                               hx-target="#message-container" 
@@ -182,6 +188,7 @@
             document.getElementById('typing-indicator').style.display = 'block';
         });
         
+        // Hide typing indicator after request
         document.body.addEventListener('htmx:afterRequest', function() {
             document.getElementById('typing-indicator').style.display = 'none';
         });
