@@ -4,41 +4,42 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>HTMX Chat Bot</title>
+
   <!-- Bootstrap 5 -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
   <!-- HTMX -->
   <script src="https://unpkg.com/htmx.org@1.9.2"></script>
 
   <style>
-    body {
-      background-color: #1c1e26;
-      color: #f3f3f3;
-    }
-
-    .card {
+    /* Wrapper-based styling scoped to custom classes only */
+    .bot-chat-card {
       background-color: #23272f;
+      border-radius: 18px;
       border: 1px solid rgba(255, 255, 255, 0.08);
       box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+      overflow: hidden;
     }
 
-    .chat-header {
+    .bot-chat-header {
       background: linear-gradient(90deg, #3a3f51 0%, #23272f 100%);
       border-bottom: 1px solid #444857;
+      color: #fff;
     }
 
-    .chat-container {
+    .bot-chat-container {
+      background-color: #23272f;
       height: 350px;
       overflow-y: auto;
-      background-color: #23272f;
+      padding: 1rem;
     }
 
-    .message-container {
+    .bot-message-container {
       display: flex;
       flex-direction: column;
       gap: 0.5rem;
     }
 
-    .user-message {
+    .bot-user-message {
       align-self: flex-end;
       background: linear-gradient(135deg, #4f8cff 0%, #2353b7 100%);
       color: #fff;
@@ -49,7 +50,7 @@
       box-shadow: 0 2px 8px rgba(79, 140, 255, 0.08);
     }
 
-    .bot-message {
+    .bot-bot-message {
       align-self: flex-start;
       background: linear-gradient(135deg, #353a4a 0%, #23272f 100%);
       color: #f3f3f3;
@@ -60,7 +61,7 @@
       box-shadow: 0 2px 8px rgba(53, 58, 74, 0.08);
     }
 
-    .typing-indicator {
+    .bot-typing-indicator {
       display: none;
       align-self: flex-start;
       background-color: #353a4a;
@@ -69,29 +70,30 @@
       border-radius: 0.75rem;
       font-style: italic;
       font-size: 0.95rem;
+      margin-top: 0.5rem;
     }
 
-    .form-control {
+    .bot-input .form-control {
       background-color: #23272f;
       color: #f3f3f3;
       border: 1px solid #444857;
       border-radius: 0.75rem;
     }
 
-    .form-control:focus {
+    .bot-input .form-control:focus {
       border-color: #4f8cff;
       box-shadow: 0 0 0 2px rgba(79, 140, 255, 0.15);
     }
 
-    .btn-primary {
+    .bot-input .btn-primary {
       background: linear-gradient(135deg, #4f8cff 0%, #2353b7 100%);
       border: none;
       border-radius: 0.75rem;
       font-weight: 500;
     }
 
-    .btn-primary:hover,
-    .btn-primary:focus {
+    .bot-input .btn-primary:hover,
+    .bot-input .btn-primary:focus {
       background: linear-gradient(135deg, #2353b7 0%, #4f8cff 100%);
     }
   </style>
@@ -100,31 +102,38 @@
   <div class="container py-5">
     <div class="row justify-content-center">
       <div class="col-md-8">
-        <div class="card rounded-3 overflow-hidden">
+        <div class="card bot-chat-card">
           <!-- Header -->
-          <div class="chat-header d-flex align-items-center justify-content-between p-3">
-            <h3 class="h6 mb-0 text-white">Chat Bot</h3>
+          <div class="bot-chat-header d-flex align-items-center justify-content-between p-3">
+            <h3 class="h6 mb-0">Chat Bot</h3>
             <button type="button" class="btn-close btn-close-white" aria-label="Close"></button>
           </div>
 
           <!-- Chat Body -->
-          <div class="chat-container p-3" id="chat-container">
-            <div class="message-container" id="message-container">
-              <div class="bot-message">
+          <div class="bot-chat-container" id="bot-chat-container">
+            <div class="bot-message-container" id="bot-message-container">
+              <div class="bot-bot-message">
                 Hello! I'm your chat assistant. How can I help you today?
               </div>
             </div>
-            <div class="typing-indicator mt-2" id="typing-indicator">
-              Bot is thinking :) ...
+            <div class="bot-typing-indicator" id="bot-typing-indicator">
+              Bot is typing...
             </div>
           </div>
 
-          <!-- Input Form -->
-          <div class="card-footer bg-transparent border-0 px-3 pb-3">
-            <form id="chat-form" class="d-flex gap-2">
+          <!-- Chat Input -->
+          <div class="p-3 border-top bot-input">
+            <form 
+              hx-post="/send_message"
+              hx-target="#bot-message-container"
+              hx-swap="beforeend"
+              hx-indicator="#bot-typing-indicator"
+              hx-on:after-request="this.reset()"
+              class="d-flex gap-2"
+            >
               <input 
                 type="text" 
-                id="chat-input"
+                name="message" 
                 class="form-control" 
                 placeholder="Type your message..." 
                 required 
@@ -138,87 +147,29 @@
     </div>
   </div>
 
-  <!-- JavaScript to handle scroll & typing indicator -->
+  <!-- JS: Auto-scroll, typing indicator -->
   <script>
     document.body.addEventListener('htmx:afterSwap', function () {
-      const chatContainer = document.getElementById('chat-container');
+      const chatContainer = document.getElementById('bot-chat-container');
       chatContainer.scrollTop = chatContainer.scrollHeight;
     });
 
     document.body.addEventListener('htmx:beforeRequest', function () {
-      document.getElementById('typing-indicator').style.display = 'block';
+      document.getElementById('bot-typing-indicator').style.display = 'block';
     });
 
     document.body.addEventListener('htmx:afterRequest', function () {
-      document.getElementById('typing-indicator').style.display = 'none';
+      document.getElementById('bot-typing-indicator').style.display = 'none';
     });
 
     document.body.addEventListener('htmx:responseError', function () {
-      const messageContainer = document.getElementById('message-container');
-      const errorMessage = document.createElement('div');
-      errorMessage.className = 'bot-message';
-      errorMessage.textContent = 'Sorry, there was an error processing your request. Please try again.';
-      messageContainer.appendChild(errorMessage);
-      document.getElementById('typing-indicator').style.display = 'none';
+      const container = document.getElementById('bot-message-container');
+      const errorMsg = document.createElement('div');
+      errorMsg.className = 'bot-bot-message';
+      errorMsg.textContent = 'Sorry, there was an error processing your request. Please try again.';
+      container.appendChild(errorMsg);
+      document.getElementById('bot-typing-indicator').style.display = 'none';
     });
-  </script>
-
-  <!-- JavaScript to handle chat flow -->
-  <script>
-    document.getElementById('chat-form').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    const input = document.getElementById('chat-input');
-    const message = input.value.trim();
-    if (!message) return;
-
-    // Append user message immediately
-    const msgContainer = document.getElementById('message-container');
-    const userMsgDiv = document.createElement('div');
-    userMsgDiv.className = 'user-message';
-    userMsgDiv.textContent = message;
-    msgContainer.appendChild(userMsgDiv);
-
-    // Scroll to bottom
-    const chatContainer = document.getElementById('chat-container');
-    chatContainer.scrollTop = chatContainer.scrollHeight;
-
-    input.value = '';
-    input.disabled = true;
-
-    // Show typing indicator
-    const typingIndicator = document.getElementById('typing-indicator');
-    typingIndicator.style.display = 'block';
-
-    // Scroll to bottom AGAIN after indicator is shown to ensure it's visible
-    chatContainer.scrollTop = chatContainer.scrollHeight;
-
-    // Send to backend
-    try {
-      const response = await fetch('/send_message', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-        body: new URLSearchParams({message})
-      });
-      const html = await response.text();
-
-      // Append bot message (assume backend returns just the bot message div)
-      const tempDiv = document.createElement('div');
-      tempDiv.innerHTML = html;
-      msgContainer.appendChild(tempDiv.firstElementChild);
-
-    } catch (err) {
-      const errorDiv = document.createElement('div');
-      errorDiv.className = 'bot-message';
-      errorDiv.textContent = 'Sorry, there was an error processing your request. Please try again.';
-      msgContainer.appendChild(errorDiv);
-    } finally {
-      document.getElementById('typing-indicator').style.display = 'none';
-      // Scroll to bottom after indicator is hidden and bot message is (potentially) added
-      chatContainer.scrollTop = chatContainer.scrollHeight;
-      input.disabled = false;
-      input.focus();
-    }
-  });
   </script>
 </body>
 </html>
