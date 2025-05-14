@@ -862,7 +862,7 @@ def send_message():
             return "Message cannot be empty", 400
 
         # Add a small delay to simulate processing (optional)
-        time.sleep(0.6)
+        time.sleep(1.2)
 
         # Get bot response
         logger.info('getting bot response')

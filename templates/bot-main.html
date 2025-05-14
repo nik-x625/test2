@@ -121,17 +121,10 @@
 
           <!-- Input Form -->
           <div class="card-footer bg-transparent border-0 px-3 pb-3">
-            <form 
-              hx-post="/send_message"
-              hx-target="#message-container"
-              hx-swap="beforeend"
-              hx-indicator="#typing-indicator"
-              hx-on:after-request="this.reset()"
-              class="d-flex gap-2"
-            >
+            <form id="chat-form" class="d-flex gap-2">
               <input 
                 type="text" 
-                name="message" 
+                id="chat-input"
                 class="form-control" 
                 placeholder="Type your message..." 
                 required 
@@ -168,6 +161,64 @@
       messageContainer.appendChild(errorMessage);
       document.getElementById('typing-indicator').style.display = 'none';
     });
+  </script>
+
+  <!-- JavaScript to handle chat flow -->
+  <script>
+    document.getElementById('chat-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const input = document.getElementById('chat-input');
+    const message = input.value.trim();
+    if (!message) return;
+
+    // Append user message immediately
+    const msgContainer = document.getElementById('message-container');
+    const userMsgDiv = document.createElement('div');
+    userMsgDiv.className = 'user-message';
+    userMsgDiv.textContent = message;
+    msgContainer.appendChild(userMsgDiv);
+
+    // Scroll to bottom
+    const chatContainer = document.getElementById('chat-container');
+    chatContainer.scrollTop = chatContainer.scrollHeight;
+
+    input.value = '';
+    input.disabled = true;
+
+    // Show typing indicator
+    const typingIndicator = document.getElementById('typing-indicator');
+    typingIndicator.style.display = 'block';
+
+    // Scroll to bottom AGAIN after indicator is shown to ensure it's visible
+    chatContainer.scrollTop = chatContainer.scrollHeight;
+
+    // Send to backend
+    try {
+      const response = await fetch('/send_message', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: new URLSearchParams({message})
+      });
+      const html = await response.text();
+
+      // Append bot message (assume backend returns just the bot message div)
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = html;
+      msgContainer.appendChild(tempDiv.firstElementChild);
+
+    } catch (err) {
+      const errorDiv = document.createElement('div');
+      errorDiv.className = 'bot-message';
+      errorDiv.textContent = 'Sorry, there was an error processing your request. Please try again.';
+      msgContainer.appendChild(errorDiv);
+    } finally {
+      document.getElementById('typing-indicator').style.display = 'none';
+      // Scroll to bottom after indicator is hidden and bot message is (potentially) added
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+      input.disabled = false;
+      input.focus();
+    }
+  });
   </script>
 </body>
 </html>
