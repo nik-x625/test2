@@ -86,5 +86,15 @@
 }
 
 .chatbot-close-popup {
-    /* Add styles here if you have a custom close button that isn't Bootstrap's btn-close */
+    color: white;
+    font-size: 2rem; /* Increased size for better visibility */
+    line-height: 1;
+    padding: 0 0.5rem; /* Adjusted padding */
+    background-color: transparent; /* Ensure no unwanted background */
+    border: none; /* Remove default button border */
+}
+
+.chatbot-close-popup:hover {
+    color: #f0f0f0; /* Slight change on hover */
+    background-color: rgba(255, 255, 255, 0.1); /* Subtle hover background */
 } 
