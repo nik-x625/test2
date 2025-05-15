@@ -12,51 +12,45 @@
 
 </head>
 <body>
-  <div class="container py-5">
-    <div class="row justify-content-center">
-      <div class="col-md-8">
-        <div class="card bot-chat-card">
-          <!-- Header -->
-          <div class="bot-chat-header d-flex align-items-center justify-content-between p-3">
-            <h3 class="h6 mb-0">Chat Bot</h3>
-            <button type="button" class="btn-close btn-close-white chatbot-close-popup" aria-label="Close"></button>
-          </div>
+  <div class="card bot-chat-card">
+    <!-- Header -->
+    <div class="bot-chat-header d-flex align-items-center justify-content-between p-3">
+      <h3 class="h6 mb-0">Chat Bot</h3>
+      <button type="button" class="btn-close btn-close-white chatbot-close-popup" aria-label="Close"></button>
+    </div>
 
-          <!-- Chat Body -->
-          <div class="bot-chat-container" id="bot-chat-container">
-            <div class="bot-message-container" id="bot-message-container">
-              <div class="bot-bot-message">
-                Hello! I'm your chat assistant. How can I help you today?
-              </div>
-            </div>
-            <div class="bot-typing-indicator" id="bot-typing-indicator">
-              Bot is typing...
-            </div>
-          </div>
-
-          <!-- Chat Input -->
-          <div class="p-3 border-top bot-input">
-            <form 
-              hx-post="/send_message"
-              hx-target="#bot-message-container"
-              hx-swap="beforeend"
-              hx-indicator="#bot-typing-indicator"
-              hx-on:after-request="this.reset()"
-              class="d-flex gap-2"
-            >
-              <input 
-                type="text" 
-                name="message" 
-                class="form-control" 
-                placeholder="Type your message..." 
-                required 
-                autocomplete="off"
-              />
-              <button type="submit" class="btn btn-primary">Send</button>
-            </form>
-          </div>
+    <!-- Chat Body -->
+    <div class="bot-chat-container" id="bot-chat-container">
+      <div class="bot-message-container" id="bot-message-container">
+        <div class="bot-bot-message">
+          Hello! I'm your chat assistant. How can I help you today?
         </div>
       </div>
+      <div class="bot-typing-indicator" id="bot-typing-indicator">
+        Bot is typing...
+      </div>
+    </div>
+
+    <!-- Chat Input -->
+    <div class="p-3 border-top bot-input">
+      <form 
+        hx-post="/send_message"
+        hx-target="#bot-message-container"
+        hx-swap="beforeend"
+        hx-indicator="#bot-typing-indicator"
+        hx-on:after-request="this.reset()"
+        class="d-flex gap-2"
+      >
+        <input 
+          type="text" 
+          name="message" 
+          class="form-control" 
+          placeholder="Type your message..." 
+          required 
+          autocomplete="off"
+        />
+        <button type="submit" class="btn btn-primary">Send</button>
+      </form>
     </div>
   </div>
 
