@@ -824,7 +824,7 @@ def edit_title():
         return str(e), 500
 
 
-# chatbot related tests
+### chatbot related tests
 def get_bot_response(message):
     # In a real application, you might integrate with an AI service here
     responses = {

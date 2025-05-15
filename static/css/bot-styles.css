@@ -37,7 +37,7 @@
   box-shadow: 0 2px 8px rgba(79, 140, 255, 0.08);
 }
 
-.bot-bot-message {
+.bot-message {
   align-self: flex-start;
   background: linear-gradient(135deg, #353a4a 0%, #23272f 100%);
   color: #f3f3f3;
