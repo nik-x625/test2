@@ -825,6 +825,8 @@ def edit_title():
 
 
 ### chatbot related tests
+
+# this has been called from flask route /send_message, which by itself is triggered by the user sending a message to the chat box
 def get_bot_response(message):
     # In a real application, you might integrate with an AI service here
     responses = {
@@ -845,11 +847,12 @@ def get_bot_response(message):
     return "I'm not sure how to respond to that. Can you try asking something else?"
 
 
+# this has been called from index.html, a JS script in the index.html file
 @app.route('/bot')
 def bot():
     return render_template('bot-main.html')
 
-
+# this has been called from bot-main.html, a JS script in the bot-main.html file
 @app.route('/send_message', methods=['POST'])
 def send_message():
     logger.info('in the bot route - send_message')
