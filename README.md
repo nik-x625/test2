@@ -197,20 +197,20 @@ We welcome contributions! Here's how you can help:
    - Update documentation
    - Follow our coding standards
 
-### Community
+<!-- ### Community
 
 - **Discord**: Join our [Discord server](https://discord.gg/smartscope) for real-time discussions
 - **Twitter**: Follow [@SmartScope](https://twitter.com/smartscope) for updates
-- **Blog**: Read our [blog](https://blog.smartscope.dev) for tutorials and news
+- **Blog**: Read our [blog](https://blog.smartscope.dev) for tutorials and news -->
 
 ### Professional Support
 
 For enterprise users or those needing dedicated support:
 
-- **Email**: support@smartscope.dev
-- **Slack**: [Join our Slack workspace](https://smartscope.slack.com)
-- **Consulting**: Available for custom implementations and integrations
+- **Email**: nik.x625@gmail.com
+<!-- - **Slack**: [Join our Slack workspace](https://smartscope.slack.com) -->
+<!-- - **Consulting**: Available for custom implementations and integrations -->
 
-### Code of Conduct
+<!-- ### Code of Conduct
 
-Please read our [Code of Conduct](CODE_OF_CONDUCT.md) to keep our community approachable and respectable.
+Please read our [Code of Conduct](CODE_OF_CONDUCT.md) to keep our community approachable and respectable. -->
