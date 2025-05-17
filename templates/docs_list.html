@@ -1,37 +1,28 @@
 <div class="container-fluid p-0">
-  <div class="row g-0">
-
-    <!-- One element on the main content -->
+  <div class="row g-2 px-2 pt-2">
     {% for doc in documents %}
-    <div class="col-md-3" style="height: 100vh; overflow-y: auto; background-color: #4c5f71;">
-      <div class="doc-card m-2">
+    <div class="col-md-3">
+      <div class="doc-card h-100">
         <div class="doc-card-header">
           {{ doc.title }}
         </div>
         <div class="doc-card-body">
-          <!-- Root documentation item -->
           <div class="doc-item mb-1">
             <div class="ms-3 mt-2">
               <p class="card-text text-light">
-
-                <!-- title -->
                 <small>
                   <span class="text-muted">Title:</span>
-                  <span>
-
-                    {{ doc.title }}
-                  </span>
+                  <span>{{ doc.title }}</span>
                 </small><br>
-                <!-- status -->
                 <small>
                   <span class="text-muted">Status:</span>
-                  <span
-                    class="badge {% if doc.doc_status == 'draft' %}bg-warning text-dark{% elif doc.doc_status == 'saved' %}bg-success{% else %}bg-secondary{% endif %}">
+                  <span class="badge 
+                    {% if doc.doc_status == 'draft' %}bg-warning text-dark
+                    {% elif doc.doc_status == 'saved' %}bg-success
+                    {% else %}bg-secondary{% endif %}">
                     {{ doc.doc_status|title }}
                   </span>
                 </small><br>
-
-                <!-- updated at -->
                 <small class="d-flex align-items-center mt-2">
                   <i class="bi bi-clock-history me-1 text-muted"></i>
                   <span class="text-muted">Last updated:</span>
@@ -40,11 +31,8 @@
                     {{ doc.updated_at|time_ago }}
                   </span>
                 </small>
-
               </p>
             </div>
-
-
             <div class="card-footer bg-transparent pt-4">
               <div class="d-flex justify-content-end gap-2">
                 <button class="btn btn-sm btn-outline-light" hx-get="/create-edit-doc?doc_id={{ doc._id }}"
@@ -58,8 +46,6 @@
                 </button>
               </div>
             </div>
-
-
           </div>
         </div>
       </div>
@@ -67,7 +53,6 @@
     {% endfor %}
   </div>
 </div>
-
 
 
 
