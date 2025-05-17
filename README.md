@@ -9,7 +9,7 @@ A modern document management system built with Python, Flask, HTMX, and Bootstra
 
 ## Keywords
 
-`smart scope development`, `sales process automation`, `effort estimation`, `time plan`, `project proposal`, `budgetary indication`, `rfp`, `rfi`, `rfx`, `cloud native`, `saas`, `high-availability`, `SmartScope`, `Document Management System`, `DMS`, `Real-time Editing`, `Document Templating`, `Document Versioning`, `Hierarchical Documents`, `Content Management`, `Auto-saving`, `Python`, `Flask`, `HTMX`, `Bootstrap 5`, `MongoDB`, `JavaScript`, `Jinja2`, `User Authentication`, `Rich Text Editor`, `Responsive Design`, `Dark Mode`, `Web Application`, `Full-Stack Development`, `Productivity Tool`
+`smart scope development`, `sales process automation`, `effort estimation`, `time plan`, `project proposal`, `budgetary indication`, `rfp`, `rfi`, `rfx`, `cloud native`, `saas`, `high-availability`, `AI`, `RAG`, `machine learning`, `smart database training`, `SmartScope`, `Document Management System`, `DMS`, `Real-time Editing`, `Document Templating`, `Document Versioning`, `Hierarchical Documents`, `Content Management`, `Auto-saving`, `Python`, `Flask`, `HTMX`, `Bootstrap 5`, `MongoDB`, `JavaScript`, `Jinja2`, `User Authentication`, `Rich Text Editor`, `Responsive Design`, `Dark Mode`, `Web Application`, `Full-Stack Development`, `Productivity Tool`
 
 ## Features
 
