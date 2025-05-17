@@ -171,8 +171,8 @@ SOFTWARE.
 ### Getting Help
 
 - **Documentation**: Check the [documentation](docs/) for detailed guides and API references
-- **Issues**: If you find a bug or have a feature request, please [open an issue](https://github.com/yourusername/smartscope/issues)
-- **Discussions**: Join our [GitHub Discussions](https://github.com/yourusername/smartscope/discussions) for general questions and community support
+- **Issues**: If you find a bug or have a feature request, please [open an issue](https://github.com/nik-x625/smartscope/issues)
+- **Discussions**: Join our [GitHub Discussions](https://github.com/nik-x625/smartscope/discussions) for general questions and community support
 - **Stack Overflow**: Use the tag `smartscope` when asking questions on Stack Overflow
 
 ### Contributing
