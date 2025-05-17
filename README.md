@@ -169,11 +169,11 @@ SOFTWARE.
 ## Support
 
 ### Getting Help
-
-- **Documentation**: Check the [documentation](docs/) for detailed guides and API references
+- **Email**: nik.x625@gmail.com
+<!-- - **Documentation**: Check the [documentation](docs/) for detailed guides and API references
 - **Issues**: If you find a bug or have a feature request, please [open an issue](https://github.com/nik-x625/smartscope/issues)
 - **Discussions**: Join our [GitHub Discussions](https://github.com/nik-x625/smartscope/discussions) for general questions and community support
-- **Stack Overflow**: Use the tag `smartscope` when asking questions on Stack Overflow
+- **Stack Overflow**: Use the tag `smartscope` when asking questions on Stack Overflow -->
 
 ### Contributing
 
