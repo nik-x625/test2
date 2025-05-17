@@ -1,7 +1,11 @@
 # SmartScope - Document Management System
 
 A modern document management system built with Python, Flask, HTMX, and Bootstrap, featuring real-time editing, document templates, and user authentication.
-<img width="1647" alt="image" src="https://github.com/user-attachments/assets/37c6be18-4b51-45e4-bf82-9211d348020f" />
+<img width="1662" alt="image" src="https://github.com/user-attachments/assets/81746b04-4757-4462-8880-8514e35e60bf" />
+
+# AI assistant to create or adjust the templates or documents with easy prompts
+<img width="637" alt="image" src="https://github.com/user-attachments/assets/18850882-a2e3-4889-b485-3f8fd3c61ff4" />
+
 
 ## Features
 
