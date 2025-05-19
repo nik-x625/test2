@@ -1,6 +1,6 @@
 # SmartScope - Document Management System
 
-A cutting-edge sales process management system designed to streamline every stage of the RFI and RFP lifecycle. From scope development and effort estimation to time-plan generation and beyond, this platform offers a comprehensive suite of features to simplify complex sales workflows. Leveraging advanced AI capabilities, the system automates critical tasks throughout the tender process, saving your team countless hours each day and enabling them to focus on what matters most-winning more business.
+A modern sales process management system designed to streamline every stage of the RFI and RFP lifecycle. From scope development and effort estimation to time-plan generation and beyond, this platform offers a comprehensive suite of features to simplify complex sales workflows. Leveraging advanced AI capabilities, the system automates critical tasks throughout the tender process, saving your team countless hours each day and enabling them to focus on what matters most-winning more business.
 
 <img width="1662" alt="image" src="https://github.com/user-attachments/assets/81746b04-4757-4462-8880-8514e35e60bf" />
 
