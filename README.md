@@ -1,6 +1,7 @@
 # SmartScope - Document Management System
 
-A modern document management system built with Python, Flask, HTMX, and Bootstrap, featuring real-time editing, document templates, and user authentication.
+A cutting-edge sales process management system designed to streamline every stage of the RFI and RFP lifecycle. From scope development and effort estimation to time-plan generation and beyond, this platform offers a comprehensive suite of features to simplify complex sales workflows. Leveraging advanced AI capabilities, the system automates critical tasks throughout the tender process, saving your team countless hours each day and enabling them to focus on what matters most-winning more business.
+
 <img width="1662" alt="image" src="https://github.com/user-attachments/assets/81746b04-4757-4462-8880-8514e35e60bf" />
 
 # AI assistant to create or adjust the templates or documents with easy prompts
@@ -9,7 +10,7 @@ A modern document management system built with Python, Flask, HTMX, and Bootstra
 
 ## Keywords
 
-`smart scope development`, `sales process automation`, `effort estimation`, `time plan`, `project proposal`, `budgetary indication`, `rfp`, `rfi`, `rfx`, `cloud native`, `saas`, `high-availability`, `AI`, `RAG`, `machine learning`, `smart database training`, `SmartScope`, `Document Management System`, `DMS`, `Real-time Editing`, `Document Templating`, `Document Versioning`, `Hierarchical Documents`, `Content Management`, `Auto-saving`, `Python`, `Flask`, `HTMX`, `Bootstrap 5`, `MongoDB`, `JavaScript`, `Jinja2`, `User Authentication`, `Rich Text Editor`, `Responsive Design`, `Dark Mode`, `Web Application`, `Full-Stack Development`, `Productivity Tool`
+`smart scope development`, `sales process automation`, `tender process`, `smart tender`, `easy tender`,`effort estimation`, `time plan`, `project proposal`, `budgetary indication`, `rfp`, `rfi`, `rfx`, `cloud native`, `saas`, `high-availability`, `AI`, `RAG`, `machine learning`, `smart database training`, `SmartScope`, `Document Management System`, `DMS`, `Real-time Editing`, `Document Templating`, `Document Versioning`, `Hierarchical Documents`, `Content Management`, `Auto-saving`, `Python`, `Flask`, `HTMX`, `Bootstrap 5`, `MongoDB`, `JavaScript`, `Jinja2`, `User Authentication`, `Rich Text Editor`, `Responsive Design`, `Dark Mode`, `Web Application`, `Full-Stack Development`, `Productivity Tool`
 
 ## Features
 
