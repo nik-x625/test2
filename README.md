@@ -6,6 +6,7 @@ A modern sales process management system designed to streamline every stage of t
 
 # AI-Powered Document Assistant
 AI assistant helps to create or adjust the templates or documents with simple prompts
+
 <img width="637" alt="image" src="https://github.com/user-attachments/assets/18850882-a2e3-4889-b485-3f8fd3c61ff4" />
 
 
@@ -49,8 +50,10 @@ AI assistant helps to create or adjust the templates or documents with simple pr
 
 - **Frontend**
   - Bootstrap 5.3.2
-  - HTMX
+  - HTMX (enables dynamic, interactive web apps without complex JavaScript)
   - Bootstrap Icons 1.11.1
+
+
 
 ## Prerequisites
 
