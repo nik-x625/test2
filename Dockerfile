@@ -2,7 +2,7 @@
 FROM python:3.9-slim
 
 RUN apt-get update -y
-RUN apt-get -y install python3 python3-pip python3-dev tzdata nodejs npm sudo ssh vim wget git telnet 
+RUN apt-get -y install tcpflow tcpdump python3 python3-pip python3-dev tzdata nodejs npm sudo ssh vim wget git telnet 
 #RUN apt-get -y install ntp ssh vim net-tools python3 python3-pip python3-dev wget tzdata git nodejs npm sudo
 #RUN apt-get -y install tcpdump tcpflow pylint iputils-ping curl unzip telnet redis lsb-release snapd
 #RUN apt-get -y install mosquitto mosquitto-clients
@@ -27,4 +27,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-CMD ["python", "app.py"] 
+CMD ["python", "app_htmx.py"] 

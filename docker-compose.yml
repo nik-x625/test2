@@ -1,18 +1,22 @@
 services:
   web:
     build: .
+    image: smartscope_image
+    container_name: smartscope_main
     ports:
       - "8000:8000"
+      - "9000:9000"
     volumes:
       - .:/app
     environment:
-      - FLASK_APP=app.py
+      - FLASK_APP=app_htmx.py
       - FLASK_ENV=development
       - MONGO_URI=mongodb://mongodb:27017/smartscope
     depends_on:
       - mongodb
 
   mongodb:
+    container_name: smartscope_mongodb
     image: mongo:latest
     ports:
       - "27017:27017"
